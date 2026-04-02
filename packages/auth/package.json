@@ -1,0 +1,23 @@
+{
+  "name": "@howlboard/auth",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "dependencies": {
+    "@howlboard/db": "workspace:*",
+    "@howlboard/env": "workspace:*",
+    "better-auth": "^1.5.5",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@howlboard/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

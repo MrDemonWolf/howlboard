@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-howl-navy: #091533;
+  --color-howl-cyan: #0FACED;
+  --color-howl-cyan-light: #3FC4FF;
+  --color-howl-cyan-dark: #0987B4;
+  --color-howl-slate: #1a2340;
+  --color-howl-surface: #0d1b2a;
+  --color-howl-muted: #8892a4;
+  --color-howl-border: #1e2d4a;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-howl-navy);
+  color: white;
+  margin: 0;
+}

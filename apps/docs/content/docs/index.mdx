@@ -1,0 +1,45 @@
+---
+title: Getting Started
+description: Welcome to the HowlBoard documentation
+---
+
+## What is HowlBoard?
+
+HowlBoard is a self-hosted, collaborative whiteboard built on [Excalidraw](https://excalidraw.com) and powered by Cloudflare Workers. It gives you full control over your data while providing real-time collaboration features.
+
+## Features
+
+- **Persistent Storage** — Drawings saved to Cloudflare R2
+- **Real-time Collaboration** — Multiple users can draw simultaneously
+- **Share Links** — Generate links with view or edit permissions
+- **Collections** — Organize boards into folders
+- **Admin Dashboard** — Manage users, boards, and settings
+- **MCP Support** — AI-powered board interaction via Model Context Protocol
+
+## Quick Start
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (v1.3+)
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
+- A Google Cloud project with OAuth credentials
+
+### Installation
+
+```bash
+git clone https://github.com/mrdemonwolf/howlboard.git
+cd howlboard
+cp .env.example apps/api/.env
+bun install
+```
+
+### Development
+
+```bash
+bun dev
+```
+
+This starts:
+- **API** at `http://localhost:3000`
+- **Web app** at `http://localhost:3001`
+- **Docs** at `http://localhost:3002`

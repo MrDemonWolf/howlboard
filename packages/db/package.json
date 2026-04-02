@@ -1,0 +1,27 @@
+{
+  "name": "@howlboard/db",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@howlboard/env": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@howlboard/config": "workspace:*",
+    "drizzle-kit": "^0.31.9",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "@howlboard/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node", "@cloudflare/workers-types"]
+  },
+  "include": ["src"]
+}
