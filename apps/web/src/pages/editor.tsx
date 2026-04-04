@@ -320,16 +320,6 @@ export function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
-        {/* Panel toggle button (below Excalidraw toolbar) */}
-        {!isLocalMode && !panelOpen && (
-          <button
-            onClick={() => setPanelOpen(true)}
-            className="absolute top-14 left-2 z-10 rounded-md bg-card/80 backdrop-blur border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            title="Show boards panel"
-          >
-            ☰ Boards
-          </button>
-        )}
 
         {excalidrawLoaded && ExcalidrawComponent ? (
         <ExcalidrawComponent
@@ -342,6 +332,12 @@ export function Editor() {
         >
           {MainMenu && (
             <MainMenu>
+              {/* Board panel toggle */}
+              {!isLocalMode && (
+                <MainMenu.Item onSelect={() => setPanelOpen((v) => !v)}>
+                  {panelOpen ? "Hide boards" : "Show boards"}
+                </MainMenu.Item>
+              )}
               {/* Save actions */}
               {!isLocalMode && (
                 <MainMenu.Item onSelect={handleSaveNow}>
