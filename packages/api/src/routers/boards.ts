@@ -6,8 +6,9 @@ import {
   createBoardSchema,
   updateBoardSchema,
   createShareLinkSchema,
+  LIMITS,
 } from "@howlboard/shared";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
@@ -89,7 +90,7 @@ export const boardsRouter = router({
 
       const [updated] = await db
         .update(board)
-        .set({ ...updates, updatedAt: new Date().toISOString() })
+        .set({ ...updates, updatedAt: new Date() })
         .where(eq(board.id, id))
         .returning();
 
@@ -121,7 +122,7 @@ export const boardsRouter = router({
     }),
 
   saveDrawing: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.string() }))
+    .input(z.object({ id: z.string(), data: z.string().max(LIMITS.MAX_SCENE_SIZE_BYTES) }))
     .mutation(async ({ ctx, input }) => {
       const [existing] = await db
         .select()
@@ -140,12 +141,63 @@ export const boardsRouter = router({
       await db
         .update(board)
         .set({
-          lastEditedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          lastEditedAt: new Date(),
+          updatedAt: new Date(),
         })
         .where(eq(board.id, input.id));
 
       return { success: true };
+    }),
+
+  saveThumbnail: protectedProcedure
+    .input(z.object({ id: z.string(), data: z.string().max(500_000) }))
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await db
+        .select()
+        .from(board)
+        .where(eq(board.id, input.id))
+        .limit(1);
+
+      if (!existing || existing.ownerId !== ctx.session.user.id) {
+        return { success: false };
+      }
+
+      const thumbnailKey = `thumbnails/${input.id}.png`;
+      const buffer = Uint8Array.from(atob(input.data), (c) => c.charCodeAt(0));
+
+      await env.DRAWINGS_BUCKET.put(thumbnailKey, buffer, {
+        httpMetadata: { contentType: "image/png" },
+      });
+
+      await db
+        .update(board)
+        .set({ thumbnailKey })
+        .where(eq(board.id, input.id));
+
+      return { success: true };
+    }),
+
+  getThumbnail: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const [existing] = await db
+        .select({ thumbnailKey: board.thumbnailKey })
+        .from(board)
+        .where(eq(board.id, input.id))
+        .limit(1);
+
+      if (!existing?.thumbnailKey) return null;
+
+      const object = await env.DRAWINGS_BUCKET.get(existing.thumbnailKey);
+      if (!object) return null;
+
+      const arrayBuffer = await object.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 8192) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+      }
+      return `data:image/png;base64,${btoa(binary)}`;
     }),
 
   loadDrawing: protectedProcedure
@@ -193,7 +245,7 @@ export const boardsRouter = router({
           boardId: input.boardId,
           token,
           permission: input.permission,
-          expiresAt: input.expiresAt,
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
           maxUses: input.maxUses,
         })
         .returning();
@@ -215,24 +267,34 @@ export const boardsRouter = router({
       }
 
       // Check expiration
-      if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+      if (link.expiresAt && link.expiresAt < new Date()) {
         return null;
       }
 
-      // Check max uses
-      if (link.maxUses && link.useCount >= link.maxUses) {
-        return null;
-      }
-
-      // Increment use count
-      await db
+      // Atomically increment use count only if under the limit
+      const result = await db
         .update(shareLink)
-        .set({ useCount: link.useCount + 1 })
-        .where(eq(shareLink.id, link.id));
+        .set({ useCount: sql`use_count + 1` })
+        .where(
+          link.maxUses
+            ? sql`${shareLink.id} = ${link.id} AND use_count < ${link.maxUses}`
+            : eq(shareLink.id, link.id),
+        )
+        .returning({ useCount: shareLink.useCount });
 
-      // Get the board
+      // If no rows updated, the max uses limit was hit concurrently
+      if (link.maxUses && result.length === 0) {
+        return null;
+      }
+
+      // Get the board — only expose safe fields
       const [boardData] = await db
-        .select()
+        .select({
+          id: board.id,
+          title: board.title,
+          visibility: board.visibility,
+          sceneKey: board.sceneKey,
+        })
         .from(board)
         .where(eq(board.id, link.boardId))
         .limit(1);
@@ -246,9 +308,27 @@ export const boardsRouter = router({
       const sceneData = object ? await object.text() : null;
 
       return {
-        board: boardData,
+        board: { id: boardData.id, title: boardData.title, visibility: boardData.visibility },
         permission: link.permission,
         sceneData,
       };
     }),
+
+  // Library sync — store user's Excalidraw library items in R2
+  saveLibrary: protectedProcedure
+    .input(z.object({ data: z.string().max(5_000_000) }))
+    .mutation(async ({ ctx, input }) => {
+      const key = `libraries/${ctx.session.user.id}.json`;
+      await env.DRAWINGS_BUCKET.put(key, input.data, {
+        httpMetadata: { contentType: "application/json" },
+      });
+      return { success: true };
+    }),
+
+  loadLibrary: protectedProcedure.query(async ({ ctx }) => {
+    const key = `libraries/${ctx.session.user.id}.json`;
+    const object = await env.DRAWINGS_BUCKET.get(key);
+    if (!object) return null;
+    return object.text();
+  }),
 });

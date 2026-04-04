@@ -11,9 +11,9 @@ export const collection = sqliteTable("collection", {
   name: text("name").notNull(),
   color: text("color"),
   sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: text("created_at")
+  createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(unixepoch())`),
 });
 
 // ─── Boards ──────────────────────────────────────────────
@@ -36,15 +36,15 @@ export const board = sqliteTable(
     collectionId: text("collection_id").references(() => collection.id, {
       onDelete: "set null",
     }),
-    lastEditedAt: text("last_edited_at")
+    lastEditedAt: integer("last_edited_at", { mode: "timestamp" })
       .notNull()
-      .default(sql`(datetime('now'))`),
-    createdAt: text("created_at")
+      .default(sql`(unixepoch())`),
+    createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
-      .default(sql`(datetime('now'))`),
-    updatedAt: text("updated_at")
+      .default(sql`(unixepoch())`),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`(unixepoch())`),
   },
   (table) => ({
     ownerIdx: index("board_owner_idx").on(table.ownerId),
@@ -67,12 +67,12 @@ export const shareLink = sqliteTable(
     })
       .notNull()
       .default("view"),
-    expiresAt: text("expires_at"),
+    expiresAt: integer("expires_at", { mode: "timestamp" }),
     maxUses: integer("max_uses"),
     useCount: integer("use_count").notNull().default(0),
-    createdAt: text("created_at")
+    createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`(unixepoch())`),
   },
   (table) => ({
     tokenIdx: index("share_link_token_idx").on(table.token),

@@ -1,52 +1,242 @@
-import { signIn } from "@/lib/auth-client";
+import { useState } from "react";
+import { Logo } from "@/components/logo";
+import { signIn, signUp, twoFactor } from "@/lib/auth-client";
+import { useTRPC } from "@/lib/trpc";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+type Mode = "signin" | "signup";
+type Step = "credentials" | "totp";
 
 export function Login() {
-  const handleGoogleSignIn = () => {
-    signIn.social({
-      provider: "google",
-      callbackURL: "/",
-    });
+  const [mode, setMode] = useState<Mode>("signin");
+  const [step, setStep] = useState<Step>("credentials");
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const trpc = useTRPC();
+  const { data: regData } = useQuery(
+    trpc.settings.getRegistrationEnabled.queryOptions(),
+  );
+  const registrationEnabled = regData?.enabled ?? false;
+
+  const handleCredentials = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (mode === "signup") {
+        const res = await signUp.email({ email, password, name });
+        if (res.error) {
+          setError(res.error.message ?? "Sign up failed");
+        }
+      } else {
+        const res = await signIn.email({
+          email,
+          password,
+          callbackURL: "/",
+        });
+        if (res.error) {
+          if (res.error.code === "TWO_FACTOR_REQUIRED") {
+            setStep("totp");
+          } else {
+            setError(res.error.message ?? "Sign in failed");
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[HowlBoard] Auth error:", err);
+      setError(err instanceof Error ? err.message : "Authentication failed. Check the console.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTotp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await twoFactor.verifyTotp({ code: totpCode });
+      if (res.error) {
+        setError(res.error.message ?? "Invalid code");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setError(null);
+    setName("");
+    setEmail("");
+    setPassword("");
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-howl-navy">
-      <div className="w-full max-w-sm space-y-8 rounded-xl border border-howl-border bg-howl-slate p-8 shadow-2xl">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <Logo size={64} />
+          </div>
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
             HowlBoard
-          </h1>
-          <p className="mt-2 text-sm text-howl-muted">
-            Collaborative whiteboard, your way
-          </p>
-        </div>
+          </CardTitle>
+          <CardDescription>
+            {step === "totp"
+              ? "Enter your two-factor code"
+              : mode === "signin"
+                ? "Sign in to your account"
+                : "Create your account"}
+          </CardDescription>
+        </CardHeader>
 
-        <button
-          onClick={handleGoogleSignIn}
-          className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
-            <path
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-              fill="#4285F4"
-            />
-            <path
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              fill="#34A853"
-            />
-            <path
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              fill="#EA4335"
-            />
-          </svg>
-          Sign in with Google
-        </button>
-      </div>
+        <CardContent>
+          {step === "credentials" ? (
+            <>
+              <form onSubmit={handleCredentials} className="space-y-4">
+                {mode === "signup" && (
+                  <div>
+                    <Label htmlFor="login-name">Name</Label>
+                    <Input
+                      id="login-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      placeholder="Your name"
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    minLength={8}
+                  />
+                </div>
 
-      <p className="mt-8 text-xs text-howl-muted">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading
+                    ? "Please wait…"
+                    : mode === "signin"
+                      ? "Sign in"
+                      : "Create account"}
+                </Button>
+              </form>
+
+              <div className="text-center text-xs text-muted-foreground mt-6">
+                {mode === "signin" ? (
+                  registrationEnabled ? (
+                    <>
+                      Don&apos;t have an account?{" "}
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-xs"
+                        onClick={() => switchMode("signup")}
+                      >
+                        Sign up
+                      </Button>
+                    </>
+                  ) : (
+                    <span>Registration is closed.</span>
+                  )
+                ) : (
+                  <>
+                    Already have an account?{" "}
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => switchMode("signin")}
+                    >
+                      Sign in
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <form onSubmit={handleTotp} className="space-y-4">
+              <div>
+                <Label htmlFor="totp-code">Authenticator code</Label>
+                <Input
+                  id="totp-code"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                  required
+                  placeholder="000000"
+                  autoFocus
+                  className="tracking-widest text-center"
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading || totpCode.length !== 6}
+                className="w-full"
+              >
+                {loading ? "Verifying…" : "Verify"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => { setStep("credentials"); setError(null); setTotpCode(""); }}
+                className="w-full text-xs"
+              >
+                &larr; Back
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      <p className="mt-8 text-xs text-muted-foreground">
         Self-hosted &middot; Open source &middot; Your data stays yours
       </p>
     </div>

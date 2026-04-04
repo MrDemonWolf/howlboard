@@ -1,0 +1,39 @@
+interface LogoProps {
+  size?: number;
+  className?: string;
+}
+
+export function Logo({ size = 48, className }: LogoProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="HowlBoard logo"
+      role="img"
+    >
+      <path d="M148 56 L100 8 L112 148 L80 180 C60 210,52 250,56 290 C60 330,80 360,110 385 L140 408 L180 440 L210 460 L256 480 L302 460 L332 440 L372 408 L402 385 C432 360,452 330,456 290 C460 250,452 210,432 180 L400 148 L412 8 L364 56 L320 88 L256 72 L192 88 Z" fill="#c8d8f0"/>
+      <path d="M256 100 L190 170 L256 210 L322 170 Z" fill="#b0c4de"/>
+      <path d="M112 148 L80 180 C64 205,58 238,60 270 L160 250 L190 170 Z" fill="#a8bad4"/>
+      <path d="M400 148 L432 180 C448 205,454 238,452 270 L352 250 L322 170 Z" fill="#a8bad4"/>
+      <path d="M110 18 L120 130 L168 80 Z" fill="#0FACED" opacity="0.3"/>
+      <path d="M402 18 L392 130 L344 80 Z" fill="#0FACED" opacity="0.3"/>
+      <path d="M220 210 L256 210 L292 210 L280 300 L256 310 L232 300 Z" fill="#94a8c4"/>
+      <path d="M232 310 L256 340 L280 310 L268 320 Q256 332,244 320 Z" fill="#8098b8"/>
+      <ellipse cx="256" cy="318" rx="10" ry="6" fill="#0FACED" opacity="0.35"/>
+      <path d="M155 195 Q155 175,180 170 Q210 168,215 190 Q218 210,195 215 Q162 218,155 195 Z" fill="#0FACED"/>
+      <ellipse cx="186" cy="193" rx="12" ry="13" fill="#091533"/>
+      <circle cx="178" cy="186" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="192" cy="198" r="2" fill="#fff" opacity="0.4"/>
+      <path d="M357 195 Q357 175,332 170 Q302 168,297 190 Q294 210,317 215 Q350 218,357 195 Z" fill="#0FACED"/>
+      <ellipse cx="326" cy="193" rx="12" ry="13" fill="#091533"/>
+      <circle cx="334" cy="186" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="320" cy="198" r="2" fill="#fff" opacity="0.4"/>
+      <path d="M200 370 Q220 380,240 374 Q256 370,272 374 Q292 380,312 370" fill="none" stroke="#8098b8" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M100 8 L112 148 L190 170" fill="none" stroke="#0FACED" strokeWidth="1.2" opacity="0.2"/>
+      <path d="M412 8 L400 148 L322 170" fill="none" stroke="#0FACED" strokeWidth="1.2" opacity="0.2"/>
+    </svg>
+  );
+}

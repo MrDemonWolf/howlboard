@@ -1,9 +1,11 @@
 import { db } from "@howlboard/db";
 import * as schema from "@howlboard/db/schema/auth";
-import { user } from "@howlboard/db/schema/index";
+import { user, appSettings } from "@howlboard/db/schema/auth";
 import { env } from "@howlboard/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { twoFactor } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -13,12 +15,11 @@ export const auth = betterAuth({
   trustedOrigins: [env.CORS_ORIGIN],
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
-  socialProviders: {
-    google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false,
   },
+  plugins: [twoFactor()],
   advanced: {
     defaultCookieAttributes: {
       sameSite: "lax",
@@ -30,7 +31,7 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        defaultValue: "viewer",
+        defaultValue: "member",
         input: false,
       },
     },
@@ -39,19 +40,30 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (userData) => {
-          // First user to register gets admin role
           const [existingUser] = await db
             .select({ id: user.id })
             .from(user)
             .limit(1);
 
+          // First user to register gets admin role, bypass registration lock
           if (!existingUser) {
             return {
               data: {
                 ...userData,
-                role: "admin",
+                role: "owner",
               },
             };
+          }
+
+          // Subsequent registrations: check if registration is enabled
+          const [regSetting] = await db
+            .select({ value: appSettings.value })
+            .from(appSettings)
+            .where(eq(appSettings.key, "registration_enabled"))
+            .limit(1);
+
+          if (regSetting?.value !== "true") {
+            throw new Error("Registration is closed");
           }
 
           return { data: userData };

@@ -5,20 +5,24 @@ import { sql } from "drizzle-orm";
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
+  username: text("username").unique(),
   name: text("name"),
   image: text("image"),
-  role: text("role", { enum: ["admin", "viewer"] })
+  role: text("role", { enum: ["owner", "member"] })
     .notNull()
-    .default("viewer"),
+    .default("member"),
   emailVerified: integer("email_verified", { mode: "boolean" })
     .notNull()
     .default(false),
-  createdAt: text("created_at")
+  twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" })
     .notNull()
-    .default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at")
+    .default(false),
+  createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 });
 
 // ─── Sessions (Better Auth managed) ─────────────────────
@@ -31,12 +35,12 @@ export const session = sqliteTable("session", {
   token: text("token").notNull().unique(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  createdAt: text("created_at")
+  createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at")
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(unixepoch())`),
 });
 
 // ─── Accounts (OAuth providers) ─────────────────────────
@@ -52,14 +56,34 @@ export const account = sqliteTable("account", {
   accessTokenExpiresAt: integer("access_token_expires_at", {
     mode: "timestamp",
   }),
+  password: text("password"),
   scope: text("scope"),
   idToken: text("id_token"),
-  createdAt: text("created_at")
+  createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at")
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(unixepoch())`),
+});
+
+// ─── Two Factor (TOTP secrets & backup codes) ───────────
+export const twoFactor = sqliteTable("two_factor", {
+  id: text("id").primaryKey(),
+  secret: text("secret").notNull(),
+  backupCodes: text("backup_codes").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
+// ─── App Settings (instance config key/value store) ─────
+export const appSettings = sqliteTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 });
 
 // ─── Verification (email verify, OAuth state) ───────────
@@ -68,10 +92,10 @@ export const verification = sqliteTable("verification", {
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-  createdAt: text("created_at")
+  createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at")
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`(unixepoch())`),
 });

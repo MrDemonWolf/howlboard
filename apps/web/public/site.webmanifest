@@ -1,0 +1,27 @@
+{
+  "name": "HowlBoard",
+  "short_name": "HowlBoard",
+  "description": "Collaborative whiteboard, your way",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#091533",
+  "theme_color": "#091533",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

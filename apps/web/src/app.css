@@ -1,22 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  --color-howl-navy: #091533;
-  --color-howl-cyan: #0FACED;
-  --color-howl-cyan-light: #3FC4FF;
-  --color-howl-cyan-dark: #0987B4;
-  --color-howl-slate: #1a2340;
-  --color-howl-surface: #0d1b2a;
-  --color-howl-muted: #8892a4;
-  --color-howl-border: #1e2d4a;
-
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* shadcn semantic colors — dark blue theme */
+  --color-background: #091533;
+  --color-foreground: #e8ecf4;
+
+  --color-card: #1a2340;
+  --color-card-foreground: #e8ecf4;
+
+  --color-popover: #1a2340;
+  --color-popover-foreground: #e8ecf4;
+
+  --color-primary: #0FACED;
+  --color-primary-foreground: #091533;
+
+  --color-secondary: #0d1b2a;
+  --color-secondary-foreground: #e8ecf4;
+
+  --color-muted: #1e2d4a;
+  --color-muted-foreground: #8892a4;
+
+  --color-accent: #0d1b2a;
+  --color-accent-foreground: #e8ecf4;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fef2f2;
+
+  --color-border: #1e2d4a;
+  --color-input: #1e2d4a;
+  --color-ring: #0FACED;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-howl-navy);
-  color: white;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   margin: 0;
 }

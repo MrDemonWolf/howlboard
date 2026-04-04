@@ -11,10 +11,13 @@
     "dev:api": "turbo -F api dev",
     "dev:docs": "turbo -F docs dev",
     "db:push": "turbo -F @howlboard/db db:push",
-    "db:generate": "turbo -F @howlboard/db db:generate"
+    "db:generate": "turbo -F @howlboard/db db:generate",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260312.1",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^25.5.0",
     "tailwindcss": "^4.2.1",

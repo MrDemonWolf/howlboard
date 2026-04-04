@@ -8,7 +8,8 @@
     {
       "binding": "DB",
       "database_name": "howlboard-db",
-      "database_id": "local"
+      "database_id": "local",
+      "migrations_dir": "../../packages/db/src/migrations"
     }
   ],
   "r2_buckets": [
