@@ -3,18 +3,24 @@ import { sql } from "drizzle-orm";
 import { user } from "./auth";
 
 // ─── Collections (folders) ───────────────────────────────
-export const collection = sqliteTable("collection", {
-  id: text("id").primaryKey(),
-  ownerId: text("owner_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  color: text("color"),
-  sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-});
+export const collection = sqliteTable(
+  "collection",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    ownerIdx: index("collection_owner_idx").on(table.ownerId),
+  }),
+);
 
 // ─── Boards ──────────────────────────────────────────────
 export const board = sqliteTable(

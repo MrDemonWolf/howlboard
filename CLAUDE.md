@@ -48,7 +48,7 @@ packages/
 
 ## Key Architectural Decisions
 
-- **Auth:** Better Auth with email/password and optional TOTP two-factor authentication. First registered user automatically becomes admin; all subsequent users default to `viewer` role.
+- **Auth:** Better Auth with email/password and optional TOTP two-factor authentication. First registered user automatically becomes `owner`; all subsequent users default to `member` role.
 - **Drawing storage:** Excalidraw scene JSON is stored in Cloudflare R2 (10MB limit per scene); board metadata (title, visibility, collection) is stored in D1.
 - **Share links:** Token-based with optional expiration date and max-use limits. Public `getByShareToken` procedure bypasses auth.
 - **tRPC procedures:** `protectedProcedure` requires an active session; `publicProcedure` is unauthenticated.
@@ -60,7 +60,7 @@ Core tables: `user`, `session`, `account`, `verification`, `twoFactor`, `board`,
 - `board.visibility`: `private | public | shared`
 - `board.sceneKey` / `thumbnailKey`: R2 object keys
 - `shareLink.permission`: `view | edit`
-- `user.role`: `admin | viewer`
+- `user.role`: `owner | member`
 - `user.twoFactorEnabled`: boolean, toggled by the 2FA plugin
 - `account.password`: nullable, only set for `credential` (email/password) accounts
 

@@ -1,5 +1,4 @@
-PRAGMA foreign_keys=OFF;--> statement-breakpoint
-CREATE TABLE `__new_account` (
+CREATE TABLE `account` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`account_id` text NOT NULL,
@@ -15,20 +14,13 @@ CREATE TABLE `__new_account` (
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-INSERT INTO `__new_account`("id", "user_id", "account_id", "provider_id", "access_token", "refresh_token", "access_token_expires_at", "password", "scope", "id_token", "created_at", "updated_at") SELECT "id", "user_id", "account_id", "provider_id", "access_token", "refresh_token", "access_token_expires_at", "password", "scope", "id_token", "created_at", "updated_at" FROM `account`;--> statement-breakpoint
-DROP TABLE `account`;--> statement-breakpoint
-ALTER TABLE `__new_account` RENAME TO `account`;--> statement-breakpoint
-PRAGMA foreign_keys=ON;--> statement-breakpoint
-CREATE TABLE `__new_app_settings` (
+CREATE TABLE `app_settings` (
 	`key` text PRIMARY KEY NOT NULL,
 	`value` text NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_app_settings`("key", "value", "updated_at") SELECT "key", "value", "updated_at" FROM `app_settings`;--> statement-breakpoint
-DROP TABLE `app_settings`;--> statement-breakpoint
-ALTER TABLE `__new_app_settings` RENAME TO `app_settings`;--> statement-breakpoint
-CREATE TABLE `__new_session` (
+CREATE TABLE `session` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`expires_at` integer NOT NULL,
@@ -40,27 +32,31 @@ CREATE TABLE `__new_session` (
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-INSERT INTO `__new_session`("id", "user_id", "expires_at", "token", "ip_address", "user_agent", "created_at", "updated_at") SELECT "id", "user_id", "expires_at", "token", "ip_address", "user_agent", "created_at", "updated_at" FROM `session`;--> statement-breakpoint
-DROP TABLE `session`;--> statement-breakpoint
-ALTER TABLE `__new_session` RENAME TO `session`;--> statement-breakpoint
 CREATE UNIQUE INDEX `session_token_unique` ON `session` (`token`);--> statement-breakpoint
-CREATE TABLE `__new_user` (
+CREATE TABLE `two_factor` (
+	`id` text PRIMARY KEY NOT NULL,
+	`secret` text NOT NULL,
+	`backup_codes` text NOT NULL,
+	`user_id` text NOT NULL,
+	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `user` (
 	`id` text PRIMARY KEY NOT NULL,
 	`email` text NOT NULL,
+	`username` text,
 	`name` text,
 	`image` text,
-	`role` text DEFAULT 'viewer' NOT NULL,
+	`role` text DEFAULT 'member' NOT NULL,
 	`email_verified` integer DEFAULT false NOT NULL,
 	`two_factor_enabled` integer DEFAULT false NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_user`("id", "email", "name", "image", "role", "email_verified", "two_factor_enabled", "created_at", "updated_at") SELECT "id", "email", "name", "image", "role", "email_verified", "two_factor_enabled", "created_at", "updated_at" FROM `user`;--> statement-breakpoint
-DROP TABLE `user`;--> statement-breakpoint
-ALTER TABLE `__new_user` RENAME TO `user`;--> statement-breakpoint
 CREATE UNIQUE INDEX `user_email_unique` ON `user` (`email`);--> statement-breakpoint
-CREATE TABLE `__new_verification` (
+CREATE UNIQUE INDEX `user_username_unique` ON `user` (`username`);--> statement-breakpoint
+CREATE TABLE `verification` (
 	`id` text PRIMARY KEY NOT NULL,
 	`identifier` text NOT NULL,
 	`value` text NOT NULL,
@@ -69,10 +65,7 @@ CREATE TABLE `__new_verification` (
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_verification`("id", "identifier", "value", "expires_at", "created_at", "updated_at") SELECT "id", "identifier", "value", "expires_at", "created_at", "updated_at" FROM `verification`;--> statement-breakpoint
-DROP TABLE `verification`;--> statement-breakpoint
-ALTER TABLE `__new_verification` RENAME TO `verification`;--> statement-breakpoint
-CREATE TABLE `__new_board` (
+CREATE TABLE `board` (
 	`id` text PRIMARY KEY NOT NULL,
 	`owner_id` text NOT NULL,
 	`title` text DEFAULT 'Untitled' NOT NULL,
@@ -88,13 +81,10 @@ CREATE TABLE `__new_board` (
 	FOREIGN KEY (`collection_id`) REFERENCES `collection`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
-INSERT INTO `__new_board`("id", "owner_id", "title", "description", "visibility", "scene_key", "thumbnail_key", "collection_id", "last_edited_at", "created_at", "updated_at") SELECT "id", "owner_id", "title", "description", "visibility", "scene_key", "thumbnail_key", "collection_id", "last_edited_at", "created_at", "updated_at" FROM `board`;--> statement-breakpoint
-DROP TABLE `board`;--> statement-breakpoint
-ALTER TABLE `__new_board` RENAME TO `board`;--> statement-breakpoint
 CREATE INDEX `board_owner_idx` ON `board` (`owner_id`);--> statement-breakpoint
 CREATE INDEX `board_visibility_idx` ON `board` (`visibility`);--> statement-breakpoint
 CREATE INDEX `board_collection_idx` ON `board` (`collection_id`);--> statement-breakpoint
-CREATE TABLE `__new_collection` (
+CREATE TABLE `collection` (
 	`id` text PRIMARY KEY NOT NULL,
 	`owner_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -104,10 +94,8 @@ CREATE TABLE `__new_collection` (
 	FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-INSERT INTO `__new_collection`("id", "owner_id", "name", "color", "sort_order", "created_at") SELECT "id", "owner_id", "name", "color", "sort_order", "created_at" FROM `collection`;--> statement-breakpoint
-DROP TABLE `collection`;--> statement-breakpoint
-ALTER TABLE `__new_collection` RENAME TO `collection`;--> statement-breakpoint
-CREATE TABLE `__new_share_link` (
+CREATE INDEX `collection_owner_idx` ON `collection` (`owner_id`);--> statement-breakpoint
+CREATE TABLE `share_link` (
 	`id` text PRIMARY KEY NOT NULL,
 	`board_id` text NOT NULL,
 	`token` text NOT NULL,
@@ -119,9 +107,6 @@ CREATE TABLE `__new_share_link` (
 	FOREIGN KEY (`board_id`) REFERENCES `board`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-INSERT INTO `__new_share_link`("id", "board_id", "token", "permission", "expires_at", "max_uses", "use_count", "created_at") SELECT "id", "board_id", "token", "permission", "expires_at", "max_uses", "use_count", "created_at" FROM `share_link`;--> statement-breakpoint
-DROP TABLE `share_link`;--> statement-breakpoint
-ALTER TABLE `__new_share_link` RENAME TO `share_link`;--> statement-breakpoint
 CREATE UNIQUE INDEX `share_link_token_unique` ON `share_link` (`token`);--> statement-breakpoint
 CREATE INDEX `share_link_token_idx` ON `share_link` (`token`);--> statement-breakpoint
 CREATE INDEX `share_link_board_idx` ON `share_link` (`board_id`);

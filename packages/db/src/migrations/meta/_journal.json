@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1775261706146,
-      "tag": "0000_nice_imperial_guard",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1775261849217,
-      "tag": "0001_whole_wither",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1775267290462,
-      "tag": "0002_complex_major_mapleleaf",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1775268209458,
-      "tag": "0003_massive_magma",
+      "when": 1775344948105,
+      "tag": "0000_lyrical_komodo",
       "breakpoints": true
     }
   ]
