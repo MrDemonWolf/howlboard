@@ -5,17 +5,14 @@ export function Toaster() {
     <SonnerToaster
       position="bottom-right"
       theme="dark"
+      richColors
+      closeButton
+      duration={3000}
       toastOptions={{
         style: {
           background: "var(--color-card)",
           border: "1px solid var(--color-border)",
           color: "var(--color-foreground)",
-          fontSize: "13px",
-        },
-        classNames: {
-          success: "!border-emerald-500/30",
-          error: "!border-red-500/30",
-          info: "!border-primary/30",
         },
       }}
     />

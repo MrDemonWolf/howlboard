@@ -274,7 +274,7 @@ export function Editor() {
     <div className="flex h-screen w-screen">
       {/* Board panel */}
       {!isLocalMode && panelOpen && (
-        <aside className="flex h-full w-52 flex-col border-r border-border bg-card shrink-0">
+        <aside className="flex h-full w-52 flex-col border-r border-border bg-card shrink-0 relative z-50">
           <div className="flex items-center justify-between px-3 py-2">
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => navigate("/")}>
               ◀ Dashboard
