@@ -1,0 +1,115 @@
+---
+title: Architecture
+description: Overview of the monorepo structure, data flow, and tech stack
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Vite, Excalidraw, TailwindCSS |
+| API | Hono, tRPC, Cloudflare Workers |
+| Auth | Better Auth (email/password + TOTP 2FA) |
+| Database | Drizzle ORM, Cloudflare D1 (SQLite) |
+| Object Storage | Cloudflare R2 |
+| Cache | Cloudflare KV |
+| Docs | Fumadocs, Next.js |
+| Build | Turborepo, Bun |
+
+## Monorepo Structure
+
+HowlBoard is a Turborepo monorepo with Bun workspaces:
+
+```
+howlboard/
+├── apps/
+│   ├── api/          # Hono + tRPC Cloudflare Worker
+│   ├── web/          # Vite + React 19 SPA (Excalidraw)
+│   └── docs/         # Fumadocs + Next.js documentation site
+├── packages/
+│   ├── api/          # tRPC router definitions
+│   ├── auth/         # Better Auth configuration
+│   ├── db/           # Drizzle ORM schema + migrations
+│   ├── env/          # Typed Cloudflare environment bindings
+│   ├── shared/       # Zod schemas, types, constants
+│   └── config/       # Shared TypeScript configuration
+├── .env.example
+├── package.json
+└── turbo.json
+```
+
+### Apps
+
+- **`apps/api`** -- The Cloudflare Worker entry point. Mounts the Hono server with tRPC routes and Better Auth handlers. Configured via `wrangler.jsonc`.
+- **`apps/web`** -- The React SPA that embeds Excalidraw. Communicates with the API via tRPC over a Vite dev proxy (`/trpc` proxied to `localhost:3000`).
+- **`apps/docs`** -- This documentation site, built with Fumadocs and Next.js.
+
+### Packages
+
+- **`packages/api`** -- tRPC router definitions (boards, collections, share links, settings). Exports `appRouter` consumed by the API worker.
+- **`packages/auth`** -- Better Auth configuration including email/password authentication and optional TOTP two-factor authentication.
+- **`packages/db`** -- Drizzle ORM schema defining all tables (user, session, account, board, collection, shareLink, etc.) and migration files targeting SQLite/D1.
+- **`packages/env`** -- TypeScript type definitions for Cloudflare Worker environment bindings (D1, R2, KV, secrets).
+- **`packages/shared`** -- Zod validation schemas and shared types used by both frontend and backend.
+- **`packages/config`** -- Shared TypeScript compiler configuration.
+
+## Data Flow
+
+```
+┌─────────────┐     tRPC / HTTP      ┌──────────────────┐
+│             │ ───────────────────► │                  │
+│   React     │                      │   Hono Worker    │
+│   Web App   │ ◄─────────────────── │   (Cloudflare)   │
+│             │     JSON responses   │                  │
+└─────────────┘                      └──────┬───┬───┬───┘
+                                            │   │   │
+                                   ┌────────┘   │   └────────┐
+                                   ▼            ▼            ▼
+                              ┌─────────┐ ┌─────────┐ ┌─────────┐
+                              │   D1    │ │   R2    │ │   KV    │
+                              │ (SQLite)│ │ (Blobs) │ │ (Cache) │
+                              └─────────┘ └─────────┘ └─────────┘
+                               Metadata    Scene JSON   Sessions
+                               Users       Thumbnails
+                               Boards
+                               Links
+```
+
+1. The **React web app** makes tRPC calls to the API. In development, Vite proxies `/trpc` requests to `localhost:3000`.
+2. The **Hono Worker** processes requests through tRPC routers. Protected procedures require a valid session from Better Auth.
+3. **Cloudflare D1** stores all relational data: users, sessions, boards (metadata), collections, and share links.
+4. **Cloudflare R2** stores Excalidraw scene JSON blobs and board thumbnails (up to 10 MB per scene).
+5. **Cloudflare KV** is used for caching and session storage.
+
+## Database Schema
+
+Core tables and their relationships:
+
+```
+user ──────────┐
+  │            │
+  ├── session  │
+  ├── account  │
+  └── board ───┼── shareLink
+       │       │
+       └── collection
+```
+
+Key fields:
+
+- **`board.visibility`**: `private`, `public`, or `shared`
+- **`board.sceneKey`** / **`board.thumbnailKey`**: R2 object keys for the drawing data
+- **`shareLink.permission`**: `view` or `edit`
+- **`user.role`**: `admin` or `viewer`
+- **`user.twoFactorEnabled`**: boolean flag for TOTP 2FA
+
+Boards optionally belong to a collection (nullable foreign key, set to null on collection delete). Share links cascade-delete when their parent board is deleted.
+
+## Authentication
+
+HowlBoard uses [Better Auth](https://www.better-auth.com/) with the following strategy:
+
+- **Email/password** accounts stored in the `account` table (password field is nullable, only set for credential accounts)
+- **Optional TOTP 2FA** via the Better Auth two-factor plugin
+- **Role-based access**: the first registered user becomes `admin`; all subsequent users default to `viewer`
+- **tRPC integration**: `protectedProcedure` requires an active session; `publicProcedure` is unauthenticated (used for share link access)

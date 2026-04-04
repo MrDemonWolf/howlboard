@@ -1,0 +1,82 @@
+---
+title: Configuration
+description: Environment variables and Cloudflare resource bindings
+---
+
+## Environment Variables
+
+HowlBoard uses environment variables for configuration. Copy `.env.example` to `.env` at the repository root and fill in the values.
+
+### Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `BETTER_AUTH_SECRET` | Secret key used by Better Auth to sign sessions and tokens. Use a long, random string. | `my-super-secret-random-string` |
+| `BETTER_AUTH_URL` | The base URL of the API server. Used by Better Auth for callback URLs. | `http://localhost:3000` (dev) or `https://api.howlboard.example.com` (prod) |
+| `CORS_ORIGIN` | The URL of the web application. Used to configure CORS headers on the API. | `http://localhost:3001` (dev) or `https://howlboard.example.com` (prod) |
+
+### Optional Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID for Google sign-in. | `123456789.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret. | `GOCSPX-...` |
+
+## Cloudflare Resource Bindings
+
+These are configured in `apps/api/wrangler.jsonc` and are automatically available to the Worker at runtime.
+
+### D1 Database
+
+| Binding | Name | Purpose |
+|---------|------|---------|
+| `DB` | `howlboard-db` | Primary database for all relational data (users, boards, collections, share links) |
+
+### R2 Bucket
+
+| Binding | Name | Purpose |
+|---------|------|---------|
+| `DRAWINGS_BUCKET` | `howlboard-drawings` | Object storage for Excalidraw scene JSON and board thumbnails |
+
+### KV Namespace
+
+| Binding | Name | Purpose |
+|---------|------|---------|
+| `CACHE` | (auto-generated ID) | Key-value cache for sessions and frequently accessed data |
+
+## Generating a Secret
+
+You can generate a secure random secret for `BETTER_AUTH_SECRET` using:
+
+```bash
+openssl rand -base64 32
+```
+
+Or with Node.js:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+## Production Configuration
+
+When deploying to Cloudflare Workers, set secrets using the Wrangler CLI instead of `.env` files:
+
+```bash
+wrangler secret put BETTER_AUTH_SECRET
+wrangler secret put BETTER_AUTH_URL
+wrangler secret put CORS_ORIGIN
+```
+
+Cloudflare bindings (D1, R2, KV) are configured in `wrangler.jsonc` and do not need to be set as secrets.
+
+## Validation Limits
+
+These limits are enforced by Zod schemas in `packages/shared`:
+
+| Field | Limit |
+|-------|-------|
+| Board title | 255 characters |
+| Board description | 1,000 characters |
+| Collection name | 100 characters |
+| Scene JSON size | 10 MB |

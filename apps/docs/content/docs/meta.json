@@ -1,4 +1,10 @@
 {
   "title": "HowlBoard",
-  "pages": ["index"]
+  "pages": [
+    "index",
+    "getting-started",
+    "architecture",
+    "configuration",
+    "development"
+  ]
 }

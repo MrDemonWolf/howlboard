@@ -1,0 +1,126 @@
+---
+title: Development
+description: Local development setup, database migrations, and common commands
+---
+
+## Local Development Setup
+
+### 1. Install dependencies
+
+```bash
+bun install
+```
+
+This installs all dependencies across the monorepo workspaces.
+
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Set the required variables (see [Configuration](/docs/configuration)):
+
+```env
+BETTER_AUTH_SECRET=dev-secret-change-in-production
+BETTER_AUTH_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3001
+```
+
+### 3. Initialize the database
+
+```bash
+bun db:generate   # Generate Drizzle migration files
+bun db:push       # Apply migrations to local D1
+```
+
+### 4. Start all services
+
+```bash
+bun dev
+```
+
+This runs Turborepo in dev mode, starting all three apps concurrently:
+
+| Service | URL | Hot Reload |
+|---------|-----|------------|
+| API Worker | `http://localhost:3000` | Yes (Wrangler) |
+| Web App | `http://localhost:3001` | Yes (Vite HMR) |
+| Docs Site | `http://localhost:3002` | Yes (Next.js) |
+
+The web app proxies `/trpc` requests to the API worker automatically via Vite config.
+
+## Common Commands
+
+### Development
+
+| Command | Description |
+|---------|-------------|
+| `bun dev` | Start all services concurrently |
+| `bun dev:web` | Start frontend only (port 3001) |
+| `bun dev:api` | Start API worker only (port 3000) |
+| `bun dev:docs` | Start documentation only (port 3002) |
+
+### Building and Type Checking
+
+| Command | Description |
+|---------|-------------|
+| `bun build` | Build all packages and apps |
+| `bun check-types` | Run TypeScript type checking across the entire monorepo |
+
+### Database
+
+| Command | Description |
+|---------|-------------|
+| `bun db:generate` | Generate Drizzle ORM migration files from schema changes |
+| `bun db:push` | Push migrations to the Cloudflare D1 database |
+
+## Database Workflow
+
+When you modify the schema in `packages/db/src/schema/`:
+
+1. **Edit the schema** -- Update the Drizzle table definitions
+2. **Generate migrations** -- Run `bun db:generate` to create SQL migration files
+3. **Apply migrations** -- Run `bun db:push` to apply them to your database
+
+For local development, Wrangler uses a local SQLite file to emulate D1. No Cloudflare account is needed for local development.
+
+## Project Structure Tips
+
+### Where to find things
+
+| What | Where |
+|------|-------|
+| API route handlers | `packages/api/src/routers/` |
+| Auth configuration | `packages/auth/src/index.ts` |
+| Database schema | `packages/db/src/schema/` |
+| Shared Zod schemas | `packages/shared/` |
+| Environment type defs | `packages/env/` |
+| Web app pages | `apps/web/src/pages/` |
+| Web app components | `apps/web/src/components/` |
+| Worker entry point | `apps/api/src/index.ts` |
+
+### Adding a new tRPC route
+
+1. Create or edit a router file in `packages/api/src/routers/`
+2. Register it in `packages/api/src/routers/index.ts`
+3. Use `protectedProcedure` for authenticated routes or `publicProcedure` for public access
+4. Add Zod input schemas in `packages/shared/` if needed
+5. The tRPC client in `apps/web/` will automatically pick up the new types
+
+### Adding a new database table
+
+1. Define the table in `packages/db/src/schema/`
+2. Export it from the schema index
+3. Run `bun db:generate` then `bun db:push`
+4. Use the table in your tRPC routers via the Drizzle ORM instance
+
+## Turborepo
+
+The monorepo uses [Turborepo](https://turbo.build/repo) for task orchestration. Key benefits:
+
+- **Parallel execution** -- Independent tasks run concurrently
+- **Caching** -- Build outputs are cached; unchanged packages skip rebuilding
+- **Dependency awareness** -- Tasks respect the dependency graph between packages
+
+The pipeline is configured in `turbo.json` at the repository root.

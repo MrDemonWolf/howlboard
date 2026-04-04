@@ -1,0 +1,160 @@
+---
+title: Getting Started
+description: Self-hosting guide covering prerequisites, environment setup, and deployment
+---
+
+## Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [Bun](https://bun.sh) | 1.3+ | Package manager and runtime |
+| [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) | Latest | Cloudflare Workers deployment |
+| [Node.js](https://nodejs.org) | 20+ | Required by some build tooling |
+| Git | Any | Clone the repository |
+
+You will also need:
+
+- A **Cloudflare account** with Workers, D1, R2, and KV enabled
+- (Optional) A **Google Cloud project** with OAuth 2.0 credentials if you want Google sign-in
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/mrdemonwolf/howlboard.git
+cd howlboard
+```
+
+### 2. Install dependencies
+
+```bash
+bun install
+```
+
+### 3. Configure environment variables
+
+Copy the example environment file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+See the [Configuration](/docs/configuration) page for a full reference of all variables.
+
+At minimum you need:
+
+```env
+BETTER_AUTH_SECRET=<a-random-secret-string>
+BETTER_AUTH_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3001
+```
+
+### 4. Set up the database
+
+Generate the Drizzle ORM migrations and push them to your D1 database:
+
+```bash
+bun db:generate
+bun db:push
+```
+
+For local development, Wrangler automatically creates a local D1 database.
+
+### 5. Start the development server
+
+```bash
+bun dev
+```
+
+This starts all services concurrently:
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| API | `http://localhost:3000` | Hono + tRPC Cloudflare Worker |
+| Web App | `http://localhost:3001` | Vite + React 19 SPA |
+| Docs | `http://localhost:3002` | Fumadocs + Next.js |
+
+### 6. Create your admin account
+
+Open `http://localhost:3001` in your browser and register your first account. The **first registered user automatically becomes the admin**. All subsequent users default to the `viewer` role.
+
+## Deploying to Cloudflare
+
+### 1. Create Cloudflare resources
+
+Using the Wrangler CLI, create the required resources:
+
+```bash
+# Create a D1 database
+wrangler d1 create howlboard-db
+
+# Create an R2 bucket
+wrangler r2 bucket create howlboard-drawings
+
+# Create a KV namespace
+wrangler kv namespace create CACHE
+```
+
+### 2. Update wrangler.jsonc
+
+Update `apps/api/wrangler.jsonc` with the actual IDs from the resources you created:
+
+```jsonc
+{
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "howlboard-db",
+      "database_id": "<your-d1-database-id>"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "DRAWINGS_BUCKET",
+      "bucket_name": "howlboard-drawings"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "<your-kv-namespace-id>"
+    }
+  ]
+}
+```
+
+### 3. Set production secrets
+
+```bash
+wrangler secret put BETTER_AUTH_SECRET
+wrangler secret put BETTER_AUTH_URL
+wrangler secret put CORS_ORIGIN
+```
+
+If using Google OAuth:
+
+```bash
+wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put GOOGLE_CLIENT_SECRET
+```
+
+### 4. Deploy the API worker
+
+```bash
+cd apps/api
+wrangler deploy
+```
+
+### 5. Deploy the web app
+
+Build the web app and deploy to Cloudflare Pages or any static hosting:
+
+```bash
+cd apps/web
+bun run build
+```
+
+The build output in `dist/` can be deployed to Cloudflare Pages, Vercel, Netlify, or any static file host. Make sure the tRPC proxy or `VITE_API_URL` points to your deployed Worker URL.

@@ -1,45 +1,42 @@
 ---
-title: Getting Started
+title: Introduction
 description: Welcome to the HowlBoard documentation
 ---
 
 ## What is HowlBoard?
 
-HowlBoard is a self-hosted, collaborative whiteboard built on [Excalidraw](https://excalidraw.com) and powered by Cloudflare Workers. It gives you full control over your data while providing real-time collaboration features.
+HowlBoard is a **self-hosted collaborative whiteboard** built on [Excalidraw](https://excalidraw.com) and deployed on Cloudflare's edge infrastructure (Workers, D1, R2, KV). It gives you full ownership of your data while providing a rich drawing and collaboration experience.
+
+## Why HowlBoard?
+
+- **Self-hosted** -- Your data stays on your infrastructure. No third-party SaaS required.
+- **Edge-native** -- Deployed on Cloudflare Workers for low-latency access worldwide.
+- **Built on Excalidraw** -- The same powerful drawing engine used by millions, with persistent storage on top.
+- **Simple deployment** -- A single Cloudflare Worker handles the API; D1 stores metadata, R2 stores drawings.
 
 ## Features
 
-- **Persistent Storage** — Drawings saved to Cloudflare R2
-- **Real-time Collaboration** — Multiple users can draw simultaneously
-- **Share Links** — Generate links with view or edit permissions
-- **Collections** — Organize boards into folders
-- **Admin Dashboard** — Manage users, boards, and settings
-- **MCP Support** — AI-powered board interaction via Model Context Protocol
+- **Persistent Storage** -- Drawings saved to Cloudflare R2 (up to 10 MB per scene)
+- **Real-time Collaboration** -- Multiple users can draw simultaneously
+- **Share Links** -- Generate links with view or edit permissions, optional expiration, and max-use limits
+- **Collections** -- Organize boards into folders
+- **Admin Dashboard** -- Manage users, boards, and system settings
+- **Two-Factor Authentication** -- Optional TOTP-based 2FA for user accounts
+- **Role-based Access** -- Admin and viewer roles; first registered user becomes admin
 
-## Quick Start
+## Next Steps
 
-### Prerequisites
-
-- [Bun](https://bun.sh) (v1.3+)
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
-- A Google Cloud project with OAuth credentials
-
-### Installation
-
-```bash
-git clone https://github.com/mrdemonwolf/howlboard.git
-cd howlboard
-cp .env.example apps/api/.env
-bun install
-```
-
-### Development
-
-```bash
-bun dev
-```
-
-This starts:
-- **API** at `http://localhost:3000`
-- **Web app** at `http://localhost:3001`
-- **Docs** at `http://localhost:3002`
+<Cards>
+  <Card title="Getting Started" href="/docs/getting-started">
+    Prerequisites, installation, and first deployment.
+  </Card>
+  <Card title="Architecture" href="/docs/architecture">
+    Monorepo structure, data flow, and tech stack.
+  </Card>
+  <Card title="Configuration" href="/docs/configuration">
+    Environment variables and Cloudflare resource bindings.
+  </Card>
+  <Card title="Development" href="/docs/development">
+    Local development setup, commands, and workflows.
+  </Card>
+</Cards>

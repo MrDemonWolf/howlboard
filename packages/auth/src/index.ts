@@ -25,6 +25,7 @@ export const auth = betterAuth({
       sameSite: "lax",
       secure: env.BETTER_AUTH_URL?.startsWith("https") ? true : false,
       httpOnly: true,
+      path: "/",
     },
   },
   user: {
@@ -45,7 +46,7 @@ export const auth = betterAuth({
             .from(user)
             .limit(1);
 
-          // First user to register gets admin role, bypass registration lock
+          // First user to register gets owner role, bypass registration lock
           if (!existingUser) {
             return {
               data: {
