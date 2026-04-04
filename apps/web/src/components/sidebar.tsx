@@ -94,9 +94,6 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex-1 min-w-0">
             <p className="truncate text-xs font-medium text-foreground">
-              {user?.name ?? "User"}
-            </p>
-            <p className="truncate text-[10px] text-muted-foreground">
               @{(user as Record<string, unknown>)?.username as string ?? user?.email?.split("@")[0] ?? "user"}
             </p>
           </div>

@@ -6,7 +6,7 @@ import {
   createCollectionSchema,
   updateCollectionSchema,
 } from "@howlboard/shared";
-import { eq, asc, sql, and } from "drizzle-orm";
+import { eq, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
@@ -137,7 +137,7 @@ export const collectionsRouter = router({
         .update(board)
         .set({
           collectionId: input.collectionId,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(board.id, input.boardId))
         .returning();

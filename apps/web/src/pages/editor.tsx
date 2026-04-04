@@ -32,14 +32,6 @@ function useSystemTheme() {
   return theme;
 }
 
-function timeAgo(ms: number): string {
-  const sec = Math.floor((Date.now() - ms) / 1000);
-  if (sec < 5) return "just now";
-  if (sec < 60) return `${sec}s ago`;
-  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-  return `${Math.floor(sec / 3600)}h ago`;
-}
-
 export function Editor() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
@@ -48,10 +40,7 @@ export function Editor() {
   const systemTheme = useSystemTheme();
   const [excalidrawLoaded, setExcalidrawLoaded] = useState(false);
   const [parseError, setParseError] = useState(false);
-  const [dirty, setDirty] = useState(false);
-  const [lastSaved, setLastSaved] = useState<number | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [, forceUpdate] = useState(0);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastThumbnailRef = useRef(0);
@@ -111,11 +100,6 @@ export function Editor() {
     });
   }, []);
 
-  // Tick "last saved X ago" every 10s
-  useEffect(() => {
-    const interval = setInterval(() => forceUpdate((n) => n + 1), 10_000);
-    return () => clearInterval(interval);
-  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getSceneJSON(api: any): string {
@@ -164,8 +148,6 @@ export function Editor() {
       { id: boardId, data },
       {
         onSuccess: () => {
-          setDirty(false);
-          setLastSaved(Date.now());
           if (showToast) toast.success("Saved");
           generateThumbnail();
         },
@@ -188,7 +170,6 @@ export function Editor() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (_elements: readonly any[], _appState: any, _files: any) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      setDirty(true);
 
       debounceRef.current = setTimeout(() => {
         const api = apiRef.current;
@@ -197,7 +178,6 @@ export function Editor() {
 
         if (!idRef.current) {
           try { localStorage.setItem(LOCAL_STORAGE_KEY, data); } catch { /* quota */ }
-          setDirty(false);
         } else {
           saveToCloud(data, false); // silent auto-save
         }
@@ -290,13 +270,6 @@ export function Editor() {
     );
   }
 
-  // Status text for menu
-  const statusText = dirty
-    ? "● Unsaved changes"
-    : lastSaved
-      ? `✓ Saved ${timeAgo(lastSaved)}`
-      : "✓ Up to date";
-
   return (
     <div className="flex h-screen w-screen">
       {/* Board panel */}
@@ -347,16 +320,17 @@ export function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
-        {/* Panel toggle button (when closed) */}
+        {/* Panel toggle button (below Excalidraw toolbar) */}
         {!isLocalMode && !panelOpen && (
           <button
             onClick={() => setPanelOpen(true)}
-            className="absolute top-2 left-2 z-10 rounded-md bg-card/80 backdrop-blur border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute top-14 left-2 z-10 rounded-md bg-card/80 backdrop-blur border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             title="Show boards panel"
           >
             ☰ Boards
           </button>
         )}
+
         {excalidrawLoaded && ExcalidrawComponent ? (
         <ExcalidrawComponent
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -401,14 +375,6 @@ export function Editor() {
               <MainMenu.DefaultItems.ToggleTheme />
               <MainMenu.DefaultItems.ChangeCanvasBackground />
               <MainMenu.DefaultItems.Help />
-              <MainMenu.Separator />
-
-              {/* Status */}
-              <MainMenu.Item onSelect={() => {}}>
-                <span className={dirty ? "text-amber-400" : "text-emerald-400"}>
-                  {statusText}
-                </span>
-              </MainMenu.Item>
             </MainMenu>
           )}
         </ExcalidrawComponent>
