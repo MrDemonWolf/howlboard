@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { Logo } from "@/components/logo";
 import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function Setup() {
+  const [searchParams] = useSearchParams();
+  const isDev = searchParams.get("dev") === "true" && window.location.hostname === "localhost";
+
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Dev mode: auto-fill form fields
+  useEffect(() => {
+    if (isDev) {
+      setName("Dev Admin");
+      setUsername("admin");
+      setEmail("dev@howlboard.local");
+      setPassword("password123");
+    }
+  }, [isDev]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
