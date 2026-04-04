@@ -94,51 +94,32 @@ app.use(
 );
 
 // ---------------------------------------------------------------------------
-// Rate-limiting middleware: auth endpoints (20 req/min) & general API (200 req/min)
+// Rate-limiting middleware factory
 // ---------------------------------------------------------------------------
-app.use("/api/auth/*", async (c, next) => {
-  const ip =
-    c.req.header("cf-connecting-ip") ||
-    c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown";
-  const { limited, remaining, resetAt } = isRateLimited(
-    ip,
-    "auth",
-    20,
-    60_000,
-  );
+function getClientIp(c: { req: { header: (name: string) => string | undefined } }): string {
+  return c.req.header("cf-connecting-ip")
+    || c.req.header("x-forwarded-for")?.split(",")[0]?.trim()
+    || "unknown";
+}
 
-  c.res.headers.set("X-RateLimit-Limit", "20");
-  c.res.headers.set("X-RateLimit-Remaining", String(remaining));
-  c.res.headers.set("X-RateLimit-Reset", String(Math.ceil(resetAt / 1000)));
+function rateLimitMiddleware(bucket: string, maxRequests: number, windowMs: number) {
+  return async (c: Parameters<Parameters<typeof app.use>[1]>[0], next: () => Promise<void>) => {
+    const ip = getClientIp(c);
+    const { limited, remaining, resetAt } = isRateLimited(ip, bucket, maxRequests, windowMs);
 
-  if (limited) {
-    return c.json({ error: "Too many requests. Please try again later." }, 429);
-  }
-  await next();
-});
+    c.res.headers.set("X-RateLimit-Limit", String(maxRequests));
+    c.res.headers.set("X-RateLimit-Remaining", String(remaining));
+    c.res.headers.set("X-RateLimit-Reset", String(Math.ceil(resetAt / 1000)));
 
-app.use("/trpc/*", async (c, next) => {
-  const ip =
-    c.req.header("cf-connecting-ip") ||
-    c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown";
-  const { limited, remaining, resetAt } = isRateLimited(
-    ip,
-    "api",
-    200,
-    60_000,
-  );
+    if (limited) {
+      return c.json({ error: "Too many requests. Please try again later." }, 429);
+    }
+    await next();
+  };
+}
 
-  c.res.headers.set("X-RateLimit-Limit", "200");
-  c.res.headers.set("X-RateLimit-Remaining", String(remaining));
-  c.res.headers.set("X-RateLimit-Reset", String(Math.ceil(resetAt / 1000)));
-
-  if (limited) {
-    return c.json({ error: "Too many requests. Please try again later." }, 429);
-  }
-  await next();
-});
+app.use("/api/auth/*", rateLimitMiddleware("auth", 20, 60_000));
+app.use("/trpc/*", rateLimitMiddleware("api", 200, 60_000));
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 

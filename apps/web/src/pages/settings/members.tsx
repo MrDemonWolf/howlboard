@@ -20,7 +20,7 @@ export function Members() {
     <DashboardLayout>
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <h1 className="text-lg font-semibold text-foreground">Members</h1>
-        <Button size="sm" onClick={() => {}}>
+        <Button size="sm" disabled title="Coming soon">
           Invite user
         </Button>
       </div>

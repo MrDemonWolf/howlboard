@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { Footer } from "@/components/footer";
 import {
   LayoutDashboard,
   Pencil,
@@ -151,21 +152,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-2 py-2">
-        {!collapsed && (
-          <>
-            <p className="text-[10px] text-muted-foreground text-center">
-              HowlBoard &copy; {new Date().getFullYear()} MrDemonWolf, Inc.
-            </p>
-            <p className="text-[10px] text-muted-foreground text-center">
-              All rights reserved.
-            </p>
-            <div className="flex justify-center gap-2 mt-0.5 mb-1">
-              <a href="/legal/terms" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Terms</a>
-              <span className="text-[10px] text-muted-foreground">&middot;</span>
-              <a href="/legal/privacy" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Privacy</a>
-            </div>
-          </>
-        )}
+        {!collapsed && <Footer className="mb-1" />}
         <button
           onClick={toggleCollapsed}
           className="flex w-full items-center justify-center rounded-md py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"

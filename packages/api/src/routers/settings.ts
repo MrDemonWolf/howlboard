@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../index";
 import { db } from "@howlboard/db";
 import { user } from "@howlboard/db/schema/auth";
@@ -268,7 +269,7 @@ export const settingsRouter = router({
         .limit(1);
 
       if (existing && existing.id !== ctx.session.user.id) {
-        throw new Error("Username is already taken");
+        throw new TRPCError({ code: "CONFLICT", message: "Username is already taken" });
       }
 
       await db

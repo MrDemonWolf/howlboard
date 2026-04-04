@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { Logo } from "@/components/logo";
+import { Footer } from "@/components/footer";
 import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,14 +133,7 @@ export function Setup() {
         </CardContent>
       </Card>
 
-      <p className="mt-8 text-xs text-muted-foreground">
-        Self-hosted &middot; Open source &middot; Your data stays yours
-      </p>
-      <div className="mt-2 flex gap-2">
-        <a href="/legal/terms" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Terms</a>
-        <span className="text-[10px] text-muted-foreground">&middot;</span>
-        <a href="/legal/privacy" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Privacy</a>
-      </div>
+      <Footer className="mt-8" />
     </div>
   );
 }

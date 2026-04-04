@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Logo } from "@/components/logo";
+import { BOARD_VISIBILITY } from "@howlboard/shared";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -82,7 +83,7 @@ export function Dashboard() {
   );
 
   function cycleVisibility(boardId: string, current: string) {
-    const order = ["private", "public", "shared"] as const;
+    const order = [BOARD_VISIBILITY.PRIVATE, BOARD_VISIBILITY.PUBLIC, BOARD_VISIBILITY.SHARED] as const;
     const next = order[(order.indexOf(current as typeof order[number]) + 1) % order.length];
     updateBoard.mutate({ id: boardId, visibility: next });
     toast.success(`Board set to ${next}`);

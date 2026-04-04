@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
+const AVATAR_SIZE = 256;
+const AVATAR_TEXT_SIZE = 120;
 const AVATAR_COLORS = [
   "#0FACED", "#6366f1", "#ec4899", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4",
 ];
@@ -108,18 +110,19 @@ export function Profile() {
 
   function handleColorAvatar(color: string) {
     const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = AVATAR_SIZE;
+    canvas.height = AVATAR_SIZE;
+    const half = AVATAR_SIZE / 2;
     const ctx = canvas.getContext("2d")!;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.arc(half, half, half, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 120px Inter, system-ui, sans-serif";
+    ctx.font = `bold ${AVATAR_TEXT_SIZE}px Inter, system-ui, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(initials, 128, 128);
+    ctx.fillText(initials, half, half);
     const base64 = canvas.toDataURL("image/png").split(",")[1];
     if (base64) uploadAvatar.mutate({ data: base64 });
   }
@@ -177,6 +180,7 @@ export function Profile() {
                     onClick={() => handleColorAvatar(color)}
                     className="h-8 w-8 rounded-full border-2 border-transparent hover:border-foreground transition-colors"
                     style={{ backgroundColor: color }}
+                    aria-label={`Set ${color} avatar`}
                   />
                 ))}
               </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Logo } from "@/components/logo";
+import { Footer } from "@/components/footer";
 import { signIn, signUp, twoFactor } from "@/lib/auth-client";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -236,14 +237,7 @@ export function Login() {
         </CardContent>
       </Card>
 
-      <p className="mt-8 text-xs text-muted-foreground">
-        Self-hosted &middot; Open source &middot; Your data stays yours
-      </p>
-      <div className="mt-2 flex gap-2">
-        <a href="/legal/terms" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Terms</a>
-        <span className="text-[10px] text-muted-foreground">&middot;</span>
-        <a href="/legal/privacy" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Privacy</a>
-      </div>
+      <Footer className="mt-8" />
     </div>
   );
 }

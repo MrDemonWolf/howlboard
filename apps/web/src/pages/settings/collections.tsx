@@ -7,7 +7,7 @@ export function CollectionsSettings() {
     <DashboardLayout>
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <h1 className="text-lg font-semibold text-foreground">Collections</h1>
-        <Button size="sm" onClick={() => {}}>
+        <Button size="sm" disabled title="Coming soon">
           + New Collection
         </Button>
       </div>
