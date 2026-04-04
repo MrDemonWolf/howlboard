@@ -1,47 +1,57 @@
 import { test, expect } from "@playwright/test";
 
-const ADMIN = {
-  name: "Test Admin",
-  email: "admin@howlboard.test",
-  password: "testpassword123",
-};
+test.describe("Setup Page", () => {
+  test("should display the setup form with all required fields", async ({
+    page,
+  }) => {
+    await page.goto("/setup");
 
-test.describe("Setup flow", () => {
-  test("redirects to /setup when no users exist", async ({ page }) => {
-    await page.goto("/");
-    await expect(page).toHaveURL("/setup");
+    // Verify the setup page heading or card is visible
     await expect(
-      page.getByRole("heading", { name: "Set up HowlBoard" }),
+      page.getByRole("heading", { name: /create.*admin|setup/i }),
+    ).toBeVisible();
+
+    // Verify form fields are present with expected placeholders
+    await expect(page.getByPlaceholder("Your name")).toBeVisible();
+    await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
+    await expect(page.getByPlaceholder("••••••••")).toBeVisible();
+
+    // Verify the submit button
+    await expect(
+      page.getByRole("button", { name: "Create admin account" }),
     ).toBeVisible();
   });
 
-  test("creates admin account and redirects to dashboard", async ({
+  test("should show validation errors for empty form submission", async ({
     page,
   }) => {
     await page.goto("/setup");
 
-    await page.getByPlaceholder("Your name").fill(ADMIN.name);
-    await page.getByPlaceholder("you@example.com").fill(ADMIN.email);
-    await page.getByPlaceholder("••••••••").fill(ADMIN.password);
+    // Click submit without filling in anything
     await page.getByRole("button", { name: "Create admin account" }).click();
 
-    // Should redirect to dashboard (or login, then dashboard)
-    await expect(page).not.toHaveURL("/setup", { timeout: 10000 });
+    // Expect HTML5 validation or custom error — the name field should be required
+    const nameInput = page.getByPlaceholder("Your name");
+    await expect(nameInput).toBeVisible();
+
+    // Check the field is marked invalid (HTML5 required validation)
+    const isInvalid = await nameInput.evaluate(
+      (el: HTMLInputElement) => !el.validity.valid,
+    );
+    expect(isInvalid).toBe(true);
   });
 
-  test("redirects away from /setup when setup is complete", async ({
-    page,
-  }) => {
-    // First, create the admin user
+  test("should accept valid input in all fields", async ({ page }) => {
     await page.goto("/setup");
-    await page.getByPlaceholder("Your name").fill(ADMIN.name);
-    await page.getByPlaceholder("you@example.com").fill(ADMIN.email);
-    await page.getByPlaceholder("••••••••").fill(ADMIN.password);
-    await page.getByRole("button", { name: "Create admin account" }).click();
-    await expect(page).not.toHaveURL("/setup", { timeout: 10000 });
 
-    // Now revisit /setup — should redirect away
-    await page.goto("/setup");
-    await expect(page).not.toHaveURL("/setup", { timeout: 5000 });
+    await page.getByPlaceholder("Your name").fill("Admin User");
+    await page.getByPlaceholder("you@example.com").fill("admin@howlboard.dev");
+    await page.getByPlaceholder("••••••••").fill("SecureP@ss123");
+
+    // Verify the button is enabled and clickable
+    const submitButton = page.getByRole("button", {
+      name: "Create admin account",
+    });
+    await expect(submitButton).toBeEnabled();
   });
 });

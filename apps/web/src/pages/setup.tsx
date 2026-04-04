@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function Setup() {
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +66,22 @@ export function Setup() {
               />
             </div>
             <div>
+              <Label htmlFor="setup-username">Username</Label>
+              <Input
+                id="setup-username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                required
+                minLength={3}
+                maxLength={30}
+                placeholder="your-username"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Lowercase letters, numbers, and hyphens only.
+              </p>
+            </div>
+            <div>
               <Label htmlFor="setup-email">Email</Label>
               <Input
                 id="setup-email"
@@ -104,6 +121,11 @@ export function Setup() {
       <p className="mt-8 text-xs text-muted-foreground">
         Self-hosted &middot; Open source &middot; Your data stays yours
       </p>
+      <div className="mt-2 flex gap-2">
+        <a href="/legal/terms" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Terms</a>
+        <span className="text-[10px] text-muted-foreground">&middot;</span>
+        <a href="/legal/privacy" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Privacy</a>
+      </div>
     </div>
   );
 }

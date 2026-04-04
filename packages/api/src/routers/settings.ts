@@ -240,4 +240,43 @@ export const settingsRouter = router({
         });
       return { success: true };
     }),
+
+  // Username
+  updateUsername: protectedProcedure
+    .input(z.object({
+      username: z.string()
+        .min(3)
+        .max(30)
+        .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/, "Lowercase letters, numbers, and hyphens only. Cannot start/end with a hyphen."),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.username, input.username))
+        .limit(1);
+
+      if (existing && existing.id !== ctx.session.user.id) {
+        throw new Error("Username is already taken");
+      }
+
+      await db
+        .update(user)
+        .set({ username: input.username })
+        .where(eq(user.id, ctx.session.user.id));
+
+      return { success: true };
+    }),
+
+  checkUsername: publicProcedure
+    .input(z.object({ username: z.string().min(3).max(30) }))
+    .query(async ({ input }) => {
+      const [existing] = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.username, input.username))
+        .limit(1);
+
+      return { available: !existing };
+    }),
 });
