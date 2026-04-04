@@ -94,7 +94,7 @@ app.use(
 );
 
 // ---------------------------------------------------------------------------
-// Rate-limiting middleware: auth endpoints (5 req/min) & general API (60 req/min)
+// Rate-limiting middleware: auth endpoints (20 req/min) & general API (200 req/min)
 // ---------------------------------------------------------------------------
 app.use("/api/auth/*", async (c, next) => {
   const ip =
@@ -104,11 +104,11 @@ app.use("/api/auth/*", async (c, next) => {
   const { limited, remaining, resetAt } = isRateLimited(
     ip,
     "auth",
-    5,
+    20,
     60_000,
   );
 
-  c.res.headers.set("X-RateLimit-Limit", "5");
+  c.res.headers.set("X-RateLimit-Limit", "20");
   c.res.headers.set("X-RateLimit-Remaining", String(remaining));
   c.res.headers.set("X-RateLimit-Reset", String(Math.ceil(resetAt / 1000)));
 
@@ -126,11 +126,11 @@ app.use("/trpc/*", async (c, next) => {
   const { limited, remaining, resetAt } = isRateLimited(
     ip,
     "api",
-    60,
+    200,
     60_000,
   );
 
-  c.res.headers.set("X-RateLimit-Limit", "60");
+  c.res.headers.set("X-RateLimit-Limit", "200");
   c.res.headers.set("X-RateLimit-Remaining", String(remaining));
   c.res.headers.set("X-RateLimit-Reset", String(Math.ceil(resetAt / 1000)));
 

@@ -7,17 +7,29 @@ import { Input } from "@/components/ui/input";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Pencil,
+  Settings,
+  User,
+  Users,
+  FolderOpen,
+  Scale,
+  ChevronsLeft,
+  ChevronsRight,
+  type LucideIcon,
+} from "lucide-react";
 
 const COLLAPSED_KEY = "howlboard-sidebar-collapsed";
 
 function SidebarLink({
   to,
-  icon,
+  icon: Icon,
   children,
   collapsed,
 }: {
   to: string;
-  icon: string;
+  icon: LucideIcon;
   children: React.ReactNode;
   collapsed: boolean;
 }) {
@@ -28,7 +40,7 @@ function SidebarLink({
       title={collapsed ? String(children) : undefined}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+          "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
           isActive
             ? "bg-primary/10 text-primary font-medium"
             : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -36,7 +48,7 @@ function SidebarLink({
         )
       }
     >
-      <span className="shrink-0 text-base">{icon}</span>
+      <Icon className="h-4 w-4 shrink-0" />
       {!collapsed && <span className="truncate">{children}</span>}
     </NavLink>
   );
@@ -59,12 +71,11 @@ export function Sidebar() {
     ),
   );
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) ?? "?";
+  const username = (user as Record<string, unknown>)?.username as string
+    ?? user?.email?.split("@")[0]
+    ?? "user";
+
+  const initials = username.slice(0, 2).toUpperCase();
 
   function toggleCollapsed() {
     const next = !collapsed;
@@ -94,7 +105,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex-1 min-w-0">
             <p className="truncate text-xs font-medium text-foreground">
-              @{(user as Record<string, unknown>)?.username as string ?? user?.email?.split("@")[0] ?? "user"}
+              {username}
             </p>
           </div>
         )}
@@ -117,8 +128,8 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-1.5 py-2 overflow-y-auto">
-        <SidebarLink to="/" icon="📋" collapsed={collapsed}>Dashboard</SidebarLink>
-        <SidebarLink to="/draw" icon="🎨" collapsed={collapsed}>Local Draw</SidebarLink>
+        <SidebarLink to="/" icon={LayoutDashboard} collapsed={collapsed}>Dashboard</SidebarLink>
+        <SidebarLink to="/draw" icon={Pencil} collapsed={collapsed}>Local Draw</SidebarLink>
 
         {!collapsed && (
           <div className="pt-3 pb-1 px-3">
@@ -129,11 +140,11 @@ export function Sidebar() {
         )}
         {collapsed && <Separator className="my-2" />}
 
-        <SidebarLink to="/settings" icon="⚙️" collapsed={collapsed}>General</SidebarLink>
-        <SidebarLink to="/settings/profile" icon="👤" collapsed={collapsed}>Profile</SidebarLink>
-        <SidebarLink to="/settings/members" icon="👥" collapsed={collapsed}>Members</SidebarLink>
-        <SidebarLink to="/settings/collections" icon="📁" collapsed={collapsed}>Collections</SidebarLink>
-        <SidebarLink to="/settings/legal" icon="📜" collapsed={collapsed}>Legal</SidebarLink>
+        <SidebarLink to="/settings" icon={Settings} collapsed={collapsed}>General</SidebarLink>
+        <SidebarLink to="/settings/profile" icon={User} collapsed={collapsed}>Profile</SidebarLink>
+        <SidebarLink to="/settings/members" icon={Users} collapsed={collapsed}>Members</SidebarLink>
+        <SidebarLink to="/settings/collections" icon={FolderOpen} collapsed={collapsed}>Collections</SidebarLink>
+        <SidebarLink to="/settings/legal" icon={Scale} collapsed={collapsed}>Legal</SidebarLink>
       </nav>
 
       <Separator />
@@ -143,7 +154,10 @@ export function Sidebar() {
         {!collapsed && (
           <>
             <p className="text-[10px] text-muted-foreground text-center">
-              &copy; {new Date().getFullYear()} MrDemonWolf, Inc.
+              HowlBoard &copy; {new Date().getFullYear()} MrDemonWolf, Inc.
+            </p>
+            <p className="text-[10px] text-muted-foreground text-center">
+              All rights reserved.
             </p>
             <div className="flex justify-center gap-2 mt-0.5 mb-1">
               <a href="/legal/terms" className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Terms</a>
@@ -154,10 +168,10 @@ export function Sidebar() {
         )}
         <button
           onClick={toggleCollapsed}
-          className="flex w-full items-center justify-center rounded-md py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          className="flex w-full items-center justify-center rounded-md py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? "»" : "«"}
+          {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
         </button>
       </div>
     </aside>

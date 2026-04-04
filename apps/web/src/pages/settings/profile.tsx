@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useTRPC } from "@/lib/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Cropper from "react-easy-crop";
+import type { Area } from "react-easy-crop";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,19 @@ const AVATAR_COLORS = [
   "#0FACED", "#6366f1", "#ec4899", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4",
 ];
 
+async function getCroppedImage(imageSrc: string, crop: Area): Promise<string> {
+  const image = new Image();
+  image.src = imageSrc;
+  await new Promise((resolve) => { image.onload = resolve; });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, 256, 256);
+  return canvas.toDataURL("image/png").split(",")[1]!;
+}
+
 export function Profile() {
   const { data: session } = useSession();
   const trpc = useTRPC();
@@ -26,8 +41,15 @@ export function Profile() {
   const user = session?.user;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [name, setName] = useState(user?.name ?? "");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+
+  const username = (user as Record<string, unknown>)?.username as string
+    ?? user?.email?.split("@")[0] ?? "";
+  const [usernameValue, setUsernameValue] = useState(username);
 
   const { data: avatarUrl } = useQuery(
     trpc.settings.getAvatar.queryOptions(
@@ -40,28 +62,32 @@ export function Profile() {
     trpc.settings.uploadAvatar.mutationOptions({
       onSuccess: () => {
         toast.success("Avatar updated");
+        setCropImage(null);
         void queryClient.invalidateQueries();
       },
     }),
   );
 
-  const deleteAccount = useMutation(
-    trpc.settings.deleteAccount.mutationOptions({
-      onSuccess: () => {
-        toast.success("Account deleted");
-        window.location.href = "/";
-      },
+  const updateUsername = useMutation(
+    trpc.settings.updateUsername.mutationOptions({
+      onSuccess: () => toast.success("Username updated"),
+      onError: (err) => toast.error(err.message),
     }),
   );
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) ?? "?";
+  const deleteAccount = useMutation(
+    trpc.settings.deleteAccount.mutationOptions({
+      onSuccess: () => { window.location.href = "/"; },
+    }),
+  );
 
-  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const initials = username.slice(0, 2).toUpperCase() || "?";
+
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
+    setCroppedArea(croppedAreaPixels);
+  }, []);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
@@ -69,15 +95,18 @@ export function Profile() {
       return;
     }
     const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = (reader.result as string).split(",")[1];
-      if (base64) uploadAvatar.mutate({ data: base64 });
-    };
+    reader.onloadend = () => setCropImage(reader.result as string);
     reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  async function handleCropConfirm() {
+    if (!cropImage || !croppedArea) return;
+    const base64 = await getCroppedImage(cropImage, croppedArea);
+    uploadAvatar.mutate({ data: base64 });
   }
 
   function handleColorAvatar(color: string) {
-    // Generate a colored circle SVG as PNG via canvas
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 256;
@@ -91,8 +120,7 @@ export function Profile() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(initials, 128, 128);
-    const dataUrl = canvas.toDataURL("image/png");
-    const base64 = dataUrl.split(",")[1];
+    const base64 = canvas.toDataURL("image/png").split(",")[1];
     if (base64) uploadAvatar.mutate({ data: base64 });
   }
 
@@ -132,7 +160,7 @@ export function Profile() {
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   className="hidden"
-                  onChange={handleFileUpload}
+                  onChange={handleFileSelect}
                 />
                 <p className="text-[11px] text-muted-foreground">PNG, JPG, or WebP. Max 2MB.</p>
               </div>
@@ -142,14 +170,13 @@ export function Profile() {
 
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">Or pick a default</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {AVATAR_COLORS.map((color) => (
                   <button
                     key={color}
                     onClick={() => handleColorAvatar(color)}
                     className="h-8 w-8 rounded-full border-2 border-transparent hover:border-foreground transition-colors"
                     style={{ backgroundColor: color }}
-                    title={`Set ${color} avatar`}
                   />
                 ))}
               </div>
@@ -157,44 +184,46 @@ export function Profile() {
           </CardContent>
         </Card>
 
-        {/* Name */}
+        {/* Username */}
         <Card>
           <CardHeader>
-            <CardTitle>Profile Name</CardTitle>
-            <CardDescription>Change your display name.</CardDescription>
+            <CardTitle>Username</CardTitle>
+            <CardDescription>Your unique username across HowlBoard.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <Label htmlFor="profile-name" className="sr-only">Name</Label>
+              <Label htmlFor="profile-username" className="sr-only">Username</Label>
               <Input
-                id="profile-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                id="profile-username"
+                value={usernameValue}
+                onChange={(e) => setUsernameValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                placeholder="your-username"
                 className="max-w-xs"
+                minLength={3}
+                maxLength={30}
               />
               <Button
                 size="sm"
-                disabled={name === user?.name || !name.trim()}
-                onClick={() => toast.info("Profile name update coming soon")}
+                disabled={usernameValue === username || !usernameValue.trim() || usernameValue.length < 3 || updateUsername.isPending}
+                onClick={() => updateUsername.mutate({ username: usernameValue })}
               >
-                Save
+                {updateUsername.isPending ? "Saving…" : "Save"}
               </Button>
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Lowercase letters, numbers, and hyphens. 3-30 characters.
+            </p>
           </CardContent>
         </Card>
 
         {/* Email */}
         <Card>
           <CardHeader>
-            <CardTitle>Account Email</CardTitle>
+            <CardTitle>Email</CardTitle>
             <CardDescription>Your account email address.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-foreground">{user?.email ?? "—"}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Email cannot be changed at this time.
-            </p>
           </CardContent>
         </Card>
 
@@ -202,7 +231,6 @@ export function Profile() {
         <Card>
           <CardHeader>
             <CardTitle>Role</CardTitle>
-            <CardDescription>Your role in this HowlBoard instance.</CardDescription>
           </CardHeader>
           <CardContent>
             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary capitalize">
@@ -213,25 +241,19 @@ export function Profile() {
 
         <Separator />
 
-        {/* Sign out */}
         <Card>
-          <CardHeader>
-            <CardTitle>Sign Out</CardTitle>
-            <CardDescription>Sign out of your account on this device.</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Button variant="outline" size="sm" onClick={() => signOut()}>
               Sign out
             </Button>
           </CardContent>
         </Card>
 
-        {/* Danger zone */}
         <Card className="border-destructive/50">
           <CardHeader>
             <CardTitle className="text-destructive">Delete Account</CardTitle>
             <CardDescription>
-              Permanently delete your account and all associated data.
+              Permanently delete your account and all data.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -242,13 +264,43 @@ export function Profile() {
         </Card>
       </div>
 
+      {/* Crop Dialog */}
+      <Dialog open={!!cropImage} onOpenChange={() => setCropImage(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Crop your avatar</DialogTitle>
+            <DialogDescription>Drag and zoom to crop your image.</DialogDescription>
+          </DialogHeader>
+          <div className="relative h-64 w-full rounded-md overflow-hidden bg-black">
+            {cropImage && (
+              <Cropper
+                image={cropImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                cropShape="round"
+                showGrid={false}
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setCropImage(null)}>Cancel</Button>
+            <Button size="sm" onClick={handleCropConfirm} disabled={uploadAvatar.isPending}>
+              {uploadAvatar.isPending ? "Uploading…" : "Save avatar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete account</DialogTitle>
-            <DialogDescription>
-              This will permanently delete your account, all boards, and all data.
-            </DialogDescription>
+            <DialogDescription>This will permanently delete everything.</DialogDescription>
           </DialogHeader>
           <Alert variant="destructive">
             <AlertDescription>This action cannot be undone.</AlertDescription>

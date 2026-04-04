@@ -40,7 +40,7 @@ export function PrivacyPolicy() {
         )}
       </main>
       <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
-        &copy; {new Date().getFullYear()} MrDemonWolf, Inc. All rights reserved.
+        HowlBoard &copy; {new Date().getFullYear()} MrDemonWolf, Inc. All rights reserved.
       </footer>
     </div>
   );

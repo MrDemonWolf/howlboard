@@ -174,6 +174,17 @@ export const settingsRouter = router({
     .input(z.object({ data: z.string().max(3_000_000) }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+
+      // Delete old avatar if it exists
+      const [existing] = await db
+        .select({ image: user.image })
+        .from(user)
+        .where(eq(user.id, userId))
+        .limit(1);
+      if (existing?.image) {
+        await env.DRAWINGS_BUCKET.delete(existing.image);
+      }
+
       const key = `avatars/${userId}.png`;
       const buffer = Uint8Array.from(atob(input.data), (c) => c.charCodeAt(0));
 
