@@ -35,6 +35,13 @@ function isRateLimited(
   const now = Date.now();
   const entry = rateLimitStore.get(key);
 
+  // Lazy cleanup: prune expired entries when map grows large
+  if (rateLimitStore.size > 1000) {
+    for (const [k, v] of rateLimitStore) {
+      if (now >= v.resetAt) rateLimitStore.delete(k);
+    }
+  }
+
   if (!entry || now >= entry.resetAt) {
     const resetAt = now + windowMs;
     rateLimitStore.set(key, { count: 1, resetAt });
@@ -52,16 +59,6 @@ function isRateLimited(
     resetAt: entry.resetAt,
   };
 }
-
-// Periodic cleanup to prevent memory growth (every 60 s, keeps map small)
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore) {
-    if (now >= entry.resetAt) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 60_000);
 
 // ---------------------------------------------------------------------------
 // Security headers
