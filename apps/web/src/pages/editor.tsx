@@ -41,6 +41,8 @@ export function Editor() {
   const [excalidrawLoaded, setExcalidrawLoaded] = useState(false);
   const [parseError, setParseError] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState("");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastThumbnailRef = useRef(0);
@@ -232,13 +234,17 @@ export function Editor() {
     toast.success("Exported as PNG");
   }
 
-  function handleRename() {
-    const current = board?.title ?? "Untitled";
-    const newTitle = prompt("Rename board:", current);
-    if (newTitle && newTitle.trim() && id) {
-      updateBoard.mutate({ id, title: newTitle.trim() });
+  function startRename() {
+    setTitleValue(board?.title ?? "Untitled");
+    setEditingTitle(true);
+  }
+
+  function submitRename() {
+    if (titleValue.trim() && id && titleValue.trim() !== board?.title) {
+      updateBoard.mutate({ id, title: titleValue.trim() });
       toast.success("Renamed");
     }
+    setEditingTitle(false);
   }
 
   // Cleanup
@@ -320,15 +326,28 @@ export function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
-        {/* Board title overlay — click to rename */}
-        {!isLocalMode && (
+        {/* Board title — inline editable */}
+        {!isLocalMode && !editingTitle && (
           <button
-            onClick={handleRename}
-            className="absolute top-1.5 left-14 z-10 max-w-[200px] truncate rounded-md px-2 py-1 text-sm font-medium text-[color:var(--color-on-surface,#a5a5a5)] hover:text-[color:var(--color-on-surface,#fff)] transition-colors"
+            onClick={startRename}
+            className="absolute top-[0.45rem] left-14 z-10 max-w-[200px] truncate rounded-md px-2 py-0.5 text-[13px] font-medium text-[color:var(--color-on-surface,#a5a5a5)] hover:text-[color:var(--color-on-surface,#fff)] hover:bg-[color:var(--island-bg-color,#232329)] transition-colors"
             title="Click to rename"
           >
             {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
           </button>
+        )}
+        {!isLocalMode && editingTitle && (
+          <input
+            autoFocus
+            value={titleValue}
+            onChange={(e) => setTitleValue(e.target.value)}
+            onBlur={submitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitRename();
+              if (e.key === "Escape") setEditingTitle(false);
+            }}
+            className="absolute top-[0.35rem] left-14 z-10 w-[200px] rounded-md border border-[color:var(--island-bg-color,#3d3d42)] bg-[color:var(--island-bg-color,#232329)] px-2 py-0.5 text-[13px] font-medium text-white outline-none focus:border-primary"
+          />
         )}
 
         {excalidrawLoaded && ExcalidrawComponent ? (
@@ -368,7 +387,7 @@ export function Editor() {
                 Export as PNG
               </MainMenu.Item>
               {!isLocalMode && (
-                <MainMenu.Item onSelect={handleRename}>
+                <MainMenu.Item onSelect={startRename}>
                   Rename board
                 </MainMenu.Item>
               )}
