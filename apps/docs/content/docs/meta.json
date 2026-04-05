@@ -5,6 +5,7 @@
     "getting-started",
     "architecture",
     "configuration",
-    "development"
+    "development",
+    "...audits"
   ]
 }

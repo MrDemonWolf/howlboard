@@ -1,0 +1,9 @@
+{
+  "title": "Audits",
+  "pages": [
+    "security-review",
+    "gdpr-audit",
+    "iso27001-gap-analysis",
+    "duplicate-audit"
+  ]
+}
