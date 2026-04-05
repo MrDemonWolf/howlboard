@@ -320,6 +320,16 @@ export function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
+        {/* Board title overlay — click to rename */}
+        {!isLocalMode && (
+          <button
+            onClick={handleRename}
+            className="absolute top-1.5 left-14 z-10 max-w-[200px] truncate rounded-md px-2 py-1 text-sm font-medium text-[color:var(--color-on-surface,#a5a5a5)] hover:text-[color:var(--color-on-surface,#fff)] transition-colors"
+            title="Click to rename"
+          >
+            {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
+          </button>
+        )}
 
         {excalidrawLoaded && ExcalidrawComponent ? (
         <ExcalidrawComponent
