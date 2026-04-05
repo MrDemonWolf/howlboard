@@ -358,7 +358,7 @@ export function Editor() {
         {!isLocalMode && (
           <button
             onClick={openRenameDialog}
-            className="absolute top-[17px] left-[58px] z-10 hidden md:flex items-center h-[36px] max-w-[220px] truncate rounded-lg px-3 text-[14px] font-medium text-white/80 hover:text-white bg-[color:var(--island-bg-color,#232329)] hover:bg-[color:var(--island-bg-color,#2a2a2f)] shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-colors cursor-text"
+            className="absolute top-[16px] left-[58px] z-10 hidden md:flex items-center h-[36px] max-w-[220px] truncate rounded-lg px-3 text-[14px] font-medium text-white/80 hover:text-white bg-[color:var(--island-bg-color,#232329)] hover:bg-[color:var(--island-bg-color,#2a2a2f)] shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-colors cursor-text"
             title="Click to rename"
           >
             {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
