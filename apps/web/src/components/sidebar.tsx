@@ -16,6 +16,7 @@ import {
   Users,
   FolderOpen,
   Scale,
+  Trash2,
   ChevronsLeft,
   ChevronsRight,
   type LucideIcon,
@@ -146,6 +147,7 @@ export function Sidebar() {
         <SidebarLink to="/settings/members" icon={Users} collapsed={collapsed}>Members</SidebarLink>
         <SidebarLink to="/settings/collections" icon={FolderOpen} collapsed={collapsed}>Collections</SidebarLink>
         <SidebarLink to="/settings/legal" icon={Scale} collapsed={collapsed}>Legal</SidebarLink>
+        <SidebarLink to="/trash" icon={Trash2} collapsed={collapsed}>Trash</SidebarLink>
       </nav>
 
       <Separator />

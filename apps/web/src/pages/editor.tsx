@@ -234,6 +234,41 @@ export function Editor() {
     toast.success("Exported as PNG");
   }
 
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  function handleImportScene() {
+    importInputRef.current?.click();
+  }
+
+  function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      try {
+        const text = reader.result as string;
+        const parsed = JSON.parse(text);
+        // Validate it's an Excalidraw file
+        if (parsed.type !== "excalidraw") {
+          toast.error("Invalid file — must be an Excalidraw scene (.excalidraw)");
+          return;
+        }
+        // If we have an API ref, load it into the current canvas
+        if (apiRef.current) {
+          apiRef.current.updateScene({
+            elements: parsed.elements ?? [],
+            appState: parsed.appState ?? {},
+          });
+          toast.success("Scene imported");
+        }
+      } catch {
+        toast.error("Failed to parse file");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
   function startRename() {
     setTitleValue(board?.title ?? "Untitled");
     setEditingTitle(true);
@@ -326,29 +361,48 @@ export function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
-        {/* Board title — inline editable */}
-        {!isLocalMode && !editingTitle && (
-          <button
-            onClick={startRename}
-            className="absolute top-[0.45rem] left-14 z-10 max-w-[200px] truncate rounded-md px-2 py-0.5 text-[13px] font-medium text-[color:var(--color-on-surface,#a5a5a5)] hover:text-[color:var(--color-on-surface,#fff)] hover:bg-[color:var(--island-bg-color,#232329)] transition-colors"
-            title="Click to rename"
-          >
-            {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
-          </button>
-        )}
-        {!isLocalMode && editingTitle && (
-          <input
-            autoFocus
-            value={titleValue}
-            onChange={(e) => setTitleValue(e.target.value)}
-            onBlur={submitRename}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submitRename();
-              if (e.key === "Escape") setEditingTitle(false);
-            }}
-            className="absolute top-[0.35rem] left-14 z-10 w-[200px] rounded-md border border-[color:var(--island-bg-color,#3d3d42)] bg-[color:var(--island-bg-color,#232329)] px-2 py-0.5 text-[13px] font-medium text-white outline-none focus:border-primary"
-          />
-        )}
+        {/* Top-left controls: sidebar toggle + title */}
+        <div className="absolute top-1 left-1 z-10 flex items-center gap-1">
+          {/* Sidebar toggle button */}
+          {!isLocalMode && (
+            <button
+              onClick={() => setPanelOpen((v) => !v)}
+              className="flex items-center justify-center h-9 w-9 rounded-lg bg-[color:var(--island-bg-color,#232329)] text-[color:var(--icon-fill-color,#a5a5a5)] hover:text-white shadow-sm transition-colors"
+              title={panelOpen ? "Hide boards" : "Show boards"}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <rect x="1" y="2" width="14" height="12" rx="2" />
+                <line x1="5.5" y1="2" x2="5.5" y2="14" />
+              </svg>
+            </button>
+          )}
+
+          {/* Hamburger menu spacer — Excalidraw renders its own at ~left:48px */}
+
+          {/* Board title — inline editable */}
+          {!isLocalMode && !editingTitle && (
+            <button
+              onClick={startRename}
+              className="flex items-center h-9 max-w-[220px] truncate rounded-lg px-3 text-[15px] font-medium text-[color:var(--color-on-surface,#c5c5c5)] hover:text-white hover:bg-[color:var(--island-bg-color,#232329)] transition-colors cursor-text ml-9"
+              title="Click to rename"
+            >
+              {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
+            </button>
+          )}
+          {!isLocalMode && editingTitle && (
+            <input
+              autoFocus
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={submitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitRename();
+                if (e.key === "Escape") setEditingTitle(false);
+              }}
+              className="flex items-center h-9 w-[220px] rounded-lg border border-primary bg-[color:var(--island-bg-color,#232329)] px-3 text-[15px] font-medium text-white outline-none ml-9"
+            />
+          )}
+        </div>
 
         {excalidrawLoaded && ExcalidrawComponent ? (
         <ExcalidrawComponent
@@ -361,13 +415,11 @@ export function Editor() {
         >
           {MainMenu && (
             <MainMenu>
-              {/* Board panel toggle */}
               {!isLocalMode && (
-                <MainMenu.Item onSelect={() => setPanelOpen((v) => !v)}>
-                  {panelOpen ? "Hide boards" : "Show boards"}
+                <MainMenu.Item onSelect={startRename}>
+                  Rename board
                 </MainMenu.Item>
               )}
-              {/* Save actions */}
               {!isLocalMode && (
                 <MainMenu.Item onSelect={handleSaveNow}>
                   Save now
@@ -383,20 +435,23 @@ export function Editor() {
                   Sign in to save
                 </MainMenu.Item>
               )}
+              <MainMenu.Separator />
               <MainMenu.Item onSelect={handleExportPNG}>
                 Export as PNG
               </MainMenu.Item>
+              <MainMenu.Item onSelect={handleImportScene}>
+                Import scene
+              </MainMenu.Item>
               {!isLocalMode && (
-                <MainMenu.Item onSelect={startRename}>
-                  Rename board
+                <MainMenu.Item onSelect={() => toast.info("Share dialog coming soon")}>
+                  Share
                 </MainMenu.Item>
               )}
+              <MainMenu.Separator />
               <MainMenu.Item onSelect={() => navigate("/")}>
                 Dashboard
               </MainMenu.Item>
               <MainMenu.Separator />
-
-              {/* Excalidraw defaults */}
               <MainMenu.DefaultItems.ToggleTheme />
               <MainMenu.DefaultItems.ChangeCanvasBackground />
               <MainMenu.DefaultItems.Help />
@@ -406,6 +461,14 @@ export function Editor() {
       ) : (
         <FullPageSpinner />
       )}
+      {/* Hidden file input for import */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".excalidraw,.json"
+        className="hidden"
+        onChange={onImportFile}
+      />
       </div>
     </div>
   );

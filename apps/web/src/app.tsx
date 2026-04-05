@@ -11,6 +11,7 @@ import { Profile } from "@/pages/settings/profile";
 import { Members } from "@/pages/settings/members";
 import { CollectionsSettings } from "@/pages/settings/collections";
 import { LegalSettings } from "@/pages/settings/legal";
+import { Trash } from "@/pages/trash";
 import { TermsOfService } from "@/pages/legal/terms";
 import { PrivacyPolicy } from "@/pages/legal/privacy";
 
@@ -81,6 +82,15 @@ export function App() {
             element={
               <AuthGuard>
                 <CollectionsSettings />
+              </AuthGuard>
+            }
+          />
+
+          <Route
+            path="/trash"
+            element={
+              <AuthGuard>
+                <Trash />
               </AuthGuard>
             }
           />

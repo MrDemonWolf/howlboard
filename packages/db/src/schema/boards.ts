@@ -51,6 +51,7 @@ export const board = sqliteTable(
     updatedAt: integer("updated_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
   },
   (table) => ({
     ownerIdx: index("board_owner_idx").on(table.ownerId),

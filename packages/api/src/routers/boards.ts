@@ -8,7 +8,7 @@ import {
   createShareLinkSchema,
   LIMITS,
 } from "@howlboard/shared";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, isNull, isNotNull, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
@@ -17,7 +17,15 @@ export const boardsRouter = router({
     return db
       .select()
       .from(board)
-      .where(eq(board.ownerId, ctx.session.user.id))
+      .where(and(eq(board.ownerId, ctx.session.user.id), isNull(board.deletedAt)))
+      .orderBy(desc(board.lastEditedAt));
+  }),
+
+  listTrashed: protectedProcedure.query(async ({ ctx }) => {
+    return db
+      .select()
+      .from(board)
+      .where(and(eq(board.ownerId, ctx.session.user.id), isNotNull(board.deletedAt)))
       .orderBy(desc(board.lastEditedAt));
   }),
 
@@ -107,6 +115,53 @@ export const boardsRouter = router({
         .limit(1);
 
       if (!existing || existing.ownerId !== ctx.session.user.id) {
+        return { success: false };
+      }
+
+      // Soft delete — move to trash
+      await db
+        .update(board)
+        .set({ deletedAt: new Date() })
+        .where(eq(board.id, input.id));
+
+      return { success: true };
+    }),
+
+  restore: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await db
+        .select()
+        .from(board)
+        .where(eq(board.id, input.id))
+        .limit(1);
+
+      if (!existing || existing.ownerId !== ctx.session.user.id) {
+        return { success: false };
+      }
+
+      await db
+        .update(board)
+        .set({ deletedAt: null })
+        .where(eq(board.id, input.id));
+
+      return { success: true };
+    }),
+
+  permanentlyDelete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await db
+        .select()
+        .from(board)
+        .where(eq(board.id, input.id))
+        .limit(1);
+
+      if (!existing || existing.ownerId !== ctx.session.user.id) {
+        return { success: false };
+      }
+
+      if (!existing.deletedAt) {
         return { success: false };
       }
 
@@ -331,4 +386,32 @@ export const boardsRouter = router({
     if (!object) return null;
     return object.text();
   }),
+
+  importScene: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().max(255).optional(),
+        data: z.string().max(10 * 1024 * 1024),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const id = nanoid();
+      const sceneKey = `scenes/${id}.json`;
+
+      await env.DRAWINGS_BUCKET.put(sceneKey, input.data, {
+        httpMetadata: { contentType: "application/json" },
+      });
+
+      const [newBoard] = await db
+        .insert(board)
+        .values({
+          id,
+          ownerId: ctx.session.user.id,
+          title: input.title ?? "Imported scene",
+          sceneKey,
+        })
+        .returning();
+
+      return newBoard;
+    }),
 });
