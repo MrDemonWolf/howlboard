@@ -59,7 +59,7 @@ const DEFAULT_PRIVACY = `# Privacy Policy
 - To store and serve your drawings and boards.
 
 ## 3. Data Storage
-All data is stored on Cloudflare infrastructure (D1, R2). Your drawings are stored as encrypted JSON files.
+All data is stored on Cloudflare infrastructure (D1, R2). Your drawings are stored as JSON files on Cloudflare R2.
 
 ## 4. Data Sharing
 We do not sell, trade, or share your personal information with third parties.
@@ -120,6 +120,23 @@ export const settingsRouter = router({
   // Protected: delete own account and all associated data
   deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.session.user.id;
+
+    // Prevent last owner from deleting themselves
+    if (ctx.session.user.role === "owner") {
+      const owners = await db.select({ id: user.id }).from(user).where(eq(user.role, "owner"));
+      if (owners.length <= 1) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot delete the last owner account. Transfer ownership first." });
+      }
+    }
+
+    // Delete avatar from R2
+    const [userData] = await db.select({ image: user.image }).from(user).where(eq(user.id, userId)).limit(1);
+    if (userData?.image) {
+      await env.DRAWINGS_BUCKET.delete(userData.image);
+    }
+
+    // Delete library from R2
+    await env.DRAWINGS_BUCKET.delete(`libraries/${userId}.json`);
 
     // Delete all R2 scene files for user's boards
     const userBoards = await db

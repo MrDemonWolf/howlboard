@@ -232,7 +232,7 @@ export const boardsRouter = router({
       return { success: true };
     }),
 
-  getThumbnail: publicProcedure
+  getThumbnail: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const [existing] = await db
