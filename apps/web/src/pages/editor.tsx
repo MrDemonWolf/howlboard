@@ -356,29 +356,13 @@ export function Editor() {
       <div className="flex-1 relative">
         {/* Top-left controls: sidebar toggle + title (desktop only) */}
         {!isLocalMode && (
-          <div className="absolute top-[17px] left-[58px] z-10 hidden md:flex items-center rounded-lg bg-[color:var(--island-bg-color,#232329)] shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
-            {/* Sidebar toggle */}
-            <button
-              onClick={() => setPanelOpen((v) => !v)}
-              className="flex items-center justify-center h-[36px] w-[36px] rounded-l-lg text-[color:var(--icon-fill-color,#a5a5a5)] hover:text-white hover:bg-white/5 transition-colors"
-              title={panelOpen ? "Hide boards" : "Show boards"}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <rect x="1" y="2" width="14" height="12" rx="2" />
-                <line x1="5.5" y1="2" x2="5.5" y2="14" />
-              </svg>
-            </button>
-            {/* Divider */}
-            <div className="w-px h-5 bg-white/10" />
-            {/* Board title — click to open rename dialog */}
-            <button
-              onClick={openRenameDialog}
-              className="flex items-center h-[36px] max-w-[220px] truncate rounded-r-lg px-3 text-[14px] font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors cursor-text"
-              title="Click to rename"
-            >
-              {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
-            </button>
-          </div>
+          <button
+            onClick={openRenameDialog}
+            className="absolute top-[17px] left-[58px] z-10 hidden md:flex items-center h-[36px] max-w-[220px] truncate rounded-lg px-3 text-[14px] font-medium text-white/80 hover:text-white bg-[color:var(--island-bg-color,#232329)] hover:bg-[color:var(--island-bg-color,#2a2a2f)] shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-colors cursor-text"
+            title="Click to rename"
+          >
+            {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
+          </button>
         )}
 
         {excalidrawLoaded && ExcalidrawComponent ? (
@@ -392,6 +376,11 @@ export function Editor() {
         >
           {MainMenu && (
             <MainMenu>
+              {!isLocalMode && (
+                <MainMenu.Item onSelect={() => setPanelOpen((v) => !v)}>
+                  {panelOpen ? "Hide boards" : "Show boards"}
+                </MainMenu.Item>
+              )}
               {!isLocalMode && (
                 <MainMenu.Item onSelect={openRenameDialog}>
                   Rename board
