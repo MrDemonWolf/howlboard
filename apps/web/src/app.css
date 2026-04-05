@@ -4,33 +4,33 @@
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* shadcn semantic colors — dark blue theme */
-  --color-background: #091533;
-  --color-foreground: #e8ecf4;
+  /* Semantic colors — Excalidraw dark mode palette */
+  --color-background: #121212;
+  --color-foreground: #e4e4e7;
 
-  --color-card: #1a2340;
-  --color-card-foreground: #e8ecf4;
+  --color-card: #1e1e1e;
+  --color-card-foreground: #e4e4e7;
 
-  --color-popover: #1a2340;
-  --color-popover-foreground: #e8ecf4;
+  --color-popover: #1e1e1e;
+  --color-popover-foreground: #e4e4e7;
 
   --color-primary: #0FACED;
-  --color-primary-foreground: #091533;
+  --color-primary-foreground: #121212;
 
-  --color-secondary: #0d1b2a;
-  --color-secondary-foreground: #e8ecf4;
+  --color-secondary: #2c2c2c;
+  --color-secondary-foreground: #e4e4e7;
 
-  --color-muted: #1e2d4a;
-  --color-muted-foreground: #8892a4;
+  --color-muted: #2c2c2c;
+  --color-muted-foreground: #a1a1aa;
 
-  --color-accent: #0d1b2a;
-  --color-accent-foreground: #e8ecf4;
+  --color-accent: #2c2c2c;
+  --color-accent-foreground: #e4e4e7;
 
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fef2f2;
 
-  --color-border: #1e2d4a;
-  --color-input: #1e2d4a;
+  --color-border: #333338;
+  --color-input: #333338;
   --color-ring: #0FACED;
 }
 
