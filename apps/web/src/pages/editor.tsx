@@ -356,7 +356,7 @@ export function Editor() {
       <div className="flex-1 relative">
         {/* Top-left controls: sidebar toggle + title (desktop only) */}
         {!isLocalMode && (
-          <div className="absolute top-[14px] left-[58px] z-10 hidden md:flex items-center rounded-lg bg-[color:var(--island-bg-color,#232329)] shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
+          <div className="absolute top-[17px] left-[58px] z-10 hidden md:flex items-center rounded-lg bg-[color:var(--island-bg-color,#232329)] shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
             {/* Sidebar toggle */}
             <button
               onClick={() => setPanelOpen((v) => !v)}
