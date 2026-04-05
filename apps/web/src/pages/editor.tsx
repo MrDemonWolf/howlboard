@@ -5,8 +5,13 @@ import { useTRPC } from "@/lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { FullPageSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -41,8 +46,8 @@ export function Editor() {
   const [excalidrawLoaded, setExcalidrawLoaded] = useState(false);
   const [parseError, setParseError] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleValue, setTitleValue] = useState("");
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastThumbnailRef = useRef(0);
@@ -269,17 +274,17 @@ export function Editor() {
     e.target.value = "";
   }
 
-  function startRename() {
-    setTitleValue(board?.title ?? "Untitled");
-    setEditingTitle(true);
+  function openRenameDialog() {
+    setRenameValue(board?.title ?? "Untitled");
+    setRenameOpen(true);
   }
 
   function submitRename() {
-    if (titleValue.trim() && id && titleValue.trim() !== board?.title) {
-      updateBoard.mutate({ id, title: titleValue.trim() });
+    if (renameValue.trim() && id && renameValue.trim() !== board?.title) {
+      updateBoard.mutate({ id, title: renameValue.trim() });
       toast.success("Renamed");
     }
-    setEditingTitle(false);
+    setRenameOpen(false);
   }
 
   // Cleanup
@@ -361,10 +366,10 @@ export function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
-        {/* Top-left controls: sidebar toggle + title */}
-        <div className="absolute top-1 left-1 z-10 flex items-center gap-1">
-          {/* Sidebar toggle button */}
-          {!isLocalMode && (
+        {/* Top-left controls: sidebar toggle + title (desktop only) */}
+        {!isLocalMode && (
+          <div className="absolute top-1 left-1 z-10 hidden md:flex items-center gap-0.5">
+            {/* Sidebar toggle */}
             <button
               onClick={() => setPanelOpen((v) => !v)}
               className="flex items-center justify-center h-9 w-9 rounded-lg bg-[color:var(--island-bg-color,#232329)] text-[color:var(--icon-fill-color,#a5a5a5)] hover:text-white shadow-sm transition-colors"
@@ -375,34 +380,16 @@ export function Editor() {
                 <line x1="5.5" y1="2" x2="5.5" y2="14" />
               </svg>
             </button>
-          )}
-
-          {/* Hamburger menu spacer — Excalidraw renders its own at ~left:48px */}
-
-          {/* Board title — inline editable */}
-          {!isLocalMode && !editingTitle && (
+            {/* Board title — click to open rename dialog */}
             <button
-              onClick={startRename}
-              className="flex items-center h-9 max-w-[220px] truncate rounded-lg px-3 text-[15px] font-medium text-[color:var(--color-on-surface,#c5c5c5)] hover:text-white hover:bg-[color:var(--island-bg-color,#232329)] transition-colors cursor-text ml-9"
+              onClick={openRenameDialog}
+              className="flex items-center h-9 max-w-[220px] truncate rounded-lg px-3 text-[15px] font-medium text-[color:var(--color-on-surface,#c5c5c5)] hover:text-white hover:bg-[color:var(--island-bg-color,#232329)] transition-colors cursor-text"
               title="Click to rename"
             >
               {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
             </button>
-          )}
-          {!isLocalMode && editingTitle && (
-            <input
-              autoFocus
-              value={titleValue}
-              onChange={(e) => setTitleValue(e.target.value)}
-              onBlur={submitRename}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") submitRename();
-                if (e.key === "Escape") setEditingTitle(false);
-              }}
-              className="flex items-center h-9 w-[220px] rounded-lg border border-primary bg-[color:var(--island-bg-color,#232329)] px-3 text-[15px] font-medium text-white outline-none ml-9"
-            />
-          )}
-        </div>
+          </div>
+        )}
 
         {excalidrawLoaded && ExcalidrawComponent ? (
         <ExcalidrawComponent
@@ -416,7 +403,7 @@ export function Editor() {
           {MainMenu && (
             <MainMenu>
               {!isLocalMode && (
-                <MainMenu.Item onSelect={startRename}>
+                <MainMenu.Item onSelect={openRenameDialog}>
                   Rename board
                 </MainMenu.Item>
               )}
@@ -470,6 +457,35 @@ export function Editor() {
         onChange={onImportFile}
       />
       </div>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename board</DialogTitle>
+            <DialogDescription>Enter a new name for this board.</DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="rename-input" className="sr-only">Board name</Label>
+            <Input
+              id="rename-input"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") submitRename(); }}
+              autoFocus
+              placeholder="Board name"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRenameOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={submitRename} disabled={!renameValue.trim()}>
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
