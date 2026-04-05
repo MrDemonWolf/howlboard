@@ -188,7 +188,7 @@ export function Editor() {
         } else {
           saveToCloud(data, false); // silent auto-save
         }
-      }, 1500);
+      }, 2000);
     },
     [],
   );
@@ -200,7 +200,7 @@ export function Editor() {
       if (apiRef.current && idRef.current) {
         saveToCloud(getSceneJSON(apiRef.current), false);
       }
-    }, 10_000);
+    }, 15_000);
     return () => clearInterval(interval);
   }, [id, isLocalMode]);
 
@@ -368,11 +368,11 @@ export function Editor() {
       <div className="flex-1 relative">
         {/* Top-left controls: sidebar toggle + title (desktop only) */}
         {!isLocalMode && (
-          <div className="absolute top-1 left-1 z-10 hidden md:flex items-center gap-0.5">
+          <div className="absolute top-1.5 left-1.5 z-10 hidden md:flex items-center rounded-lg bg-[color:var(--island-bg-color,#232329)] shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
             {/* Sidebar toggle */}
             <button
               onClick={() => setPanelOpen((v) => !v)}
-              className="flex items-center justify-center h-9 w-9 rounded-lg bg-[color:var(--island-bg-color,#232329)] text-[color:var(--icon-fill-color,#a5a5a5)] hover:text-white shadow-sm transition-colors"
+              className="flex items-center justify-center h-9 w-9 rounded-l-lg text-[color:var(--icon-fill-color,#a5a5a5)] hover:text-white hover:bg-white/5 transition-colors"
               title={panelOpen ? "Hide boards" : "Show boards"}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -380,10 +380,12 @@ export function Editor() {
                 <line x1="5.5" y1="2" x2="5.5" y2="14" />
               </svg>
             </button>
+            {/* Divider */}
+            <div className="w-px h-5 bg-white/10" />
             {/* Board title — click to open rename dialog */}
             <button
               onClick={openRenameDialog}
-              className="flex items-center h-9 max-w-[220px] truncate rounded-lg px-3 text-[15px] font-medium text-[color:var(--color-on-surface,#c5c5c5)] hover:text-white hover:bg-[color:var(--island-bg-color,#232329)] transition-colors cursor-text"
+              className="flex items-center h-9 max-w-[220px] truncate rounded-r-lg px-3 text-[14px] font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors cursor-text"
               title="Click to rename"
             >
               {updateBoard.variables?.title ?? board?.title ?? "Untitled"}
