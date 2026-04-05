@@ -33,6 +33,12 @@
   <body>
     <div id="root"></div>
     <script>
+      // Prevent flash of wrong theme
+      (function() {
+        var t = localStorage.getItem('howlboard-theme') || 'system';
+        var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      })();
       // Excalidraw hand-drawn font assets
       window.EXCALIDRAW_ASSET_PATH = "https://unpkg.com/@excalidraw/excalidraw/dist/prod/";
     </script>

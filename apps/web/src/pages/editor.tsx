@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
 import { toast } from "sonner";
 
 const LOCAL_STORAGE_KEY = "howlboard-local-scene";
@@ -24,25 +25,12 @@ let MainMenu: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let exportToBlob: any = null;
 
-function useSystemTheme() {
-  const [theme, setTheme] = useState<"light" | "dark">(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => setTheme(e.matches ? "dark" : "light");
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return theme;
-}
-
 export function Editor() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const trpc = useTRPC();
   const { data: session } = useSession();
-  const systemTheme = useSystemTheme();
+  const { resolved: appTheme } = useTheme();
   const [excalidrawLoaded, setExcalidrawLoaded] = useState(false);
   const [parseError, setParseError] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -399,7 +387,7 @@ export function Editor() {
           excalidrawAPI={(api: any) => { apiRef.current = api; }}
           initialData={initialData}
           onChange={handleChange}
-          theme={systemTheme}
+          theme={appTheme}
           name={isLocalMode ? "Local canvas" : (updateBoard.variables?.title ?? board?.title ?? "Untitled")}
         >
           {MainMenu && (

@@ -8,6 +8,7 @@ import { useTRPC } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Footer } from "@/components/footer";
+import { useTheme } from "@/lib/theme";
 import {
   LayoutDashboard,
   Pencil,
@@ -17,6 +18,9 @@ import {
   FolderOpen,
   Scale,
   Trash2,
+  Sun,
+  Moon,
+  Monitor,
   ChevronsLeft,
   ChevronsRight,
   type LucideIcon,
@@ -64,6 +68,7 @@ export function Sidebar() {
   const { data: session } = useSession();
   const navigate = useNavigate();
   const trpc = useTRPC();
+  const { theme, setTheme } = useTheme();
   const user = session?.user;
 
   const { data: avatarUrl } = useQuery(
@@ -154,6 +159,32 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-2 py-2">
+        {/* Theme toggle */}
+        <div className={cn("flex items-center gap-0.5 mb-1", collapsed ? "justify-center" : "justify-center")}>
+          <button
+            onClick={() => setTheme("light")}
+            className={cn("rounded-md p-1.5 transition-colors", theme === "light" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
+            title="Light mode"
+          >
+            <Sun className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => setTheme("dark")}
+            className={cn("rounded-md p-1.5 transition-colors", theme === "dark" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
+            title="Dark mode"
+          >
+            <Moon className="h-3.5 w-3.5" />
+          </button>
+          {!collapsed && (
+            <button
+              onClick={() => setTheme("system")}
+              className={cn("rounded-md p-1.5 transition-colors", theme === "system" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}
+              title="System preference"
+            >
+              <Monitor className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
         {!collapsed && <Footer className="mb-1" />}
         <button
           onClick={toggleCollapsed}

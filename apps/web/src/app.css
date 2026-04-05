@@ -3,32 +3,49 @@
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+}
 
-  /* Semantic colors — Excalidraw dark mode palette */
-  --color-background: #121212;
-  --color-foreground: #e4e4e7;
-
-  --color-card: #1e1e1e;
-  --color-card-foreground: #e4e4e7;
-
-  --color-popover: #1e1e1e;
-  --color-popover-foreground: #e4e4e7;
-
+/* Light mode (default) */
+:root {
+  --color-background: #ffffff;
+  --color-foreground: #1a1a1a;
+  --color-card: #f8f8f8;
+  --color-card-foreground: #1a1a1a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1a1a1a;
   --color-primary: #0FACED;
-  --color-primary-foreground: #121212;
-
-  --color-secondary: #2c2c2c;
-  --color-secondary-foreground: #e4e4e7;
-
-  --color-muted: #2c2c2c;
-  --color-muted-foreground: #a1a1aa;
-
-  --color-accent: #2c2c2c;
-  --color-accent-foreground: #e4e4e7;
-
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f0f0f0;
+  --color-secondary-foreground: #1a1a1a;
+  --color-muted: #f0f0f0;
+  --color-muted-foreground: #6b6b6b;
+  --color-accent: #f0f0f0;
+  --color-accent-foreground: #1a1a1a;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fef2f2;
+  --color-border: #e5e5e5;
+  --color-input: #e5e5e5;
+  --color-ring: #0FACED;
+}
 
+/* Dark mode */
+.dark {
+  --color-background: #121212;
+  --color-foreground: #e4e4e7;
+  --color-card: #1e1e1e;
+  --color-card-foreground: #e4e4e7;
+  --color-popover: #1e1e1e;
+  --color-popover-foreground: #e4e4e7;
+  --color-primary: #0FACED;
+  --color-primary-foreground: #121212;
+  --color-secondary: #2c2c2c;
+  --color-secondary-foreground: #e4e4e7;
+  --color-muted: #2c2c2c;
+  --color-muted-foreground: #a1a1aa;
+  --color-accent: #2c2c2c;
+  --color-accent-foreground: #e4e4e7;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fef2f2;
   --color-border: #333338;
   --color-input: #333338;
   --color-ring: #0FACED;
