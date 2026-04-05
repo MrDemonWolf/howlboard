@@ -31,11 +31,13 @@ function BoardThumbnail({ boardId }: { boardId: string }) {
 
   if (thumbnailUrl) {
     return (
-      <img
-        src={thumbnailUrl}
-        alt="Board preview"
-        className="h-full w-full rounded-lg object-cover"
-      />
+      <div className="h-full w-full rounded-lg bg-muted overflow-hidden">
+        <img
+          src={thumbnailUrl}
+          alt="Board preview"
+          className="h-full w-full object-cover rounded-lg"
+        />
+      </div>
     );
   }
 
