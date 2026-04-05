@@ -23,5 +23,29 @@
       "binding": "CACHE",
       "id": "local"
     }
-  ]
+  ],
+  "env": {
+    "production": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "howlboard-db",
+          "database_id": "<YOUR_D1_DATABASE_ID>",
+          "migrations_dir": "../../packages/db/src/migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "DRAWINGS_BUCKET",
+          "bucket_name": "howlboard-drawings"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CACHE",
+          "id": "<YOUR_KV_NAMESPACE_ID>"
+        }
+      ]
+    }
+  }
 }
